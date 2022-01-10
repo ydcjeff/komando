@@ -5,7 +5,7 @@ const { test } = Deno;
 const NAME = 'test';
 const VERSION = 'v0.0.0';
 
-test('root flags', () => {
+test('root long flags', () => {
   komando({
     name: NAME,
     version: VERSION,
@@ -24,7 +24,28 @@ test('root flags', () => {
   }, ['--flagA', 'abc', '--flagB', '123']);
 });
 
-test('command flags', () => {
+test('root short flags', () => {
+  komando({
+    name: NAME,
+    version: VERSION,
+    flags: {
+      flagA: {
+        alias: 'A',
+        help: 'flagA help',
+      },
+      flagB: {
+        alias: 'B',
+        help: 'flagB help',
+      },
+    },
+    run(flags) {
+      assertStrictEquals(flags.flagA, 'abc');
+      assertStrictEquals(flags.flagB, 123);
+    },
+  }, ['-A', 'abc', '-B', '123']);
+});
+
+test('command long flags', () => {
   komando({
     name: NAME,
     version: VERSION,
@@ -46,4 +67,30 @@ test('command flags', () => {
       assertStrictEquals(flags.flagB, 123);
     },
   }, ['test', '--flagA', 'abc', '--flagB', '123']);
+});
+
+test('command short flags', () => {
+  komando({
+    name: NAME,
+    version: VERSION,
+    commands: [
+      {
+        name: 'test',
+        flags: {
+          flagA: {
+            alias: 'A',
+            help: 'flagA help',
+          },
+          flagB: {
+            alias: 'B',
+            help: 'flagB help',
+          },
+        },
+      },
+    ],
+    run(flags) {
+      assertStrictEquals(flags.flagA, 'abc');
+      assertStrictEquals(flags.flagB, 124);
+    },
+  }, ['test', '-A', 'abc', '-B', '123']);
 });

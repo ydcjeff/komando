@@ -1,4 +1,4 @@
-import { Args, parse } from 'https://deno.land/std@0.120.0/flags/mod.ts';
+import { parse } from 'https://deno.land/std@0.120.0/flags/mod.ts';
 
 export function komando(opt: KomandoOptions, argv: string[] = Deno.args) {
   const resolved: ResolvedKomandoOptions = {
@@ -22,22 +22,15 @@ export function komando(opt: KomandoOptions, argv: string[] = Deno.args) {
     };
   }
 
-  build(resolved, parse(argv));
+  build(resolved, argv);
 }
 
 export function defineCommand(command: Command): Command {
   return command;
 }
 
-function build(resolved: ResolvedKomandoOptions, argv: Args) {
-  const { _: inputArgs, ...inputFlags } = argv;
-  const { name, version } = resolved;
+function build(resolved: ResolvedKomandoOptions, argv: string[]) {
   let { commands, flags, args, run } = resolved;
-
-  if ((inputFlags.version || inputFlags.V) && version) {
-    console.log(`${name}@${version}`);
-    return;
-  }
 
   // filter out the matched commands
   let hasSubCommands = false;
@@ -45,26 +38,48 @@ function build(resolved: ResolvedKomandoOptions, argv: Args) {
     // reset here
     hasSubCommands = false;
     for (const cmd of commands) {
-      const val = inputArgs[0];
-
+      const val = argv[0];
       if (cmd.name === val || cmd.aliases?.includes(val as string)) {
         commands = cmd.commands as Command[];
         flags = resolveFlags(flags, cmd.flags);
         args = cmd.args as Arg;
         run = cmd.run;
-        inputArgs.shift();
+        argv.shift();
         hasSubCommands = !!cmd.commands;
         break;
       }
     }
   } while (hasSubCommands);
 
+  const unknowns: Record<string, unknown> = {};
+  const { _: inputArgs, ...inputFlags } = parse(argv, {
+    alias: Object.fromEntries(
+      Object.entries(flags).map(([k, v]) => [k, v.alias ?? `__${k}__`]), // hack to skip unknownFn
+    ),
+    default: Object.fromEntries(
+      Object.entries(flags).map(([k, v]) => [k, v.default ?? undefined]),
+    ),
+    unknown: (arg, _, v) => {
+      unknowns[arg] = v;
+      return false;
+    },
+  });
+
+  if (!unknowns) {
+    console.table(unknowns);
+    throw new Error('Unknown flags found. See the above table.');
+  }
+
+  const { name, version } = resolved;
+  if ((inputFlags.version || inputFlags.V) && version) {
+    console.log(`${name}@${version}`);
+    return;
+  }
+
   for (const iflag in inputFlags) {
     const val = inputFlags[iflag];
     if (iflag in flags) {
       flags[iflag] = val;
-    } else {
-      throw new Error(`Unknown flag: "${iflag}" with value "${val}"`);
     }
   }
 
@@ -111,8 +126,9 @@ type Flag = {
   [field: string]: {
     help: string;
     alias?: string;
-    placeholder?: string;
+    default?: unknown;
     preserve?: boolean;
+    placeholder?: string;
   };
 };
 

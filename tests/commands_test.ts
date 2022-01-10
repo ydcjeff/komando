@@ -10,7 +10,7 @@ test('root command', () => {
     name: NAME,
     version: VERSION,
     run() {
-      assert(true)
+      assert(true);
     },
   }, []);
 });
@@ -23,9 +23,25 @@ test('dev command', () => {
       {
         name: 'dev',
         run() {
-          assert(true)
-        }
+          assert(true);
+        },
       },
     ],
   }, ['dev']);
+});
+
+test('dev command alias', () => {
+  komando({
+    name: NAME,
+    version: VERSION,
+    commands: [
+      {
+        name: 'dev',
+        aliases: ['d'],
+        run() {
+          assert(true);
+        },
+      },
+    ],
+  }, ['d']);
 });
