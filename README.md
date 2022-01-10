@@ -1,1 +1,1 @@
-# komando
+# komando (コマンド)
