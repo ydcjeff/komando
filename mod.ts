@@ -64,11 +64,11 @@ function build(resolved: ResolvedKomandoOptions, argv: Args) {
     if (iflag in flags) {
       flags[iflag] = val;
     } else {
-      throw new Error(`Unknown flag: ${iflag} with value ${val}`);
+      throw new Error(`Unknown flag: "${iflag}" with value "${val}"`);
     }
   }
 
-  if (run) run(flags)
+  if (run) run(flags);
 }
 
 function resolveFlags(parent: Flag, child?: Flag): Flag {

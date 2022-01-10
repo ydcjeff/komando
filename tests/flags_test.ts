@@ -1,9 +1,9 @@
-import { assertStrictEquals } from "https://deno.land/std@0.120.0/testing/asserts.ts";
-import { komando } from "../mod.ts";
+import { assertStrictEquals } from 'https://deno.land/std@0.120.0/testing/asserts.ts';
+import { komando } from '../mod.ts';
 
-const { test } = Deno
-const NAME = 'test'
-const VERSION = 'v0.0.0'
+const { test } = Deno;
+const NAME = 'test';
+const VERSION = 'v0.0.0';
 
 test('root flags', () => {
   komando({
@@ -11,18 +11,18 @@ test('root flags', () => {
     version: VERSION,
     flags: {
       flagA: {
-        help: 'flagA help'
+        help: 'flagA help',
       },
       flagB: {
-        help: 'flagB help'
-      }
+        help: 'flagB help',
+      },
     },
     run(flags) {
-      assertStrictEquals(flags.flagA, 'abc')
-      assertStrictEquals(flags.flagB, 123)
-    }
-  }, ['--flagA', 'abc', '--flagB', '123'])
-})
+      assertStrictEquals(flags.flagA, 'abc');
+      assertStrictEquals(flags.flagB, 123);
+    },
+  }, ['--flagA', 'abc', '--flagB', '123']);
+});
 
 test('command flags', () => {
   komando({
@@ -33,17 +33,17 @@ test('command flags', () => {
         name: 'test',
         flags: {
           flagA: {
-            help: 'flagA help'
+            help: 'flagA help',
           },
           flagB: {
-            help: 'flagB help'
-          }
+            help: 'flagB help',
+          },
         },
-      }
+      },
     ],
     run(flags) {
-      assertStrictEquals(flags.flagA, 'abc')
-      assertStrictEquals(flags.flagB, 123)
-    }
-  }, ['test', '--flagA', 'abc', '--flagB', '123'])
-})
+      assertStrictEquals(flags.flagA, 'abc');
+      assertStrictEquals(flags.flagB, 123);
+    },
+  }, ['test', '--flagA', 'abc', '--flagB', '123']);
+});
