@@ -58,8 +58,15 @@ function run(resolved: ResolvedKomandoOptions, argv: Args) {
       }
     }
   } while (hasSubCommands);
+}
 
-  console.log(inputArgs);
+function resolveFlags(parent: Flag, child?: Flag): Flag {
+  return {
+    ...child,
+    ...Object.fromEntries(
+      Object.entries(parent).filter(([_, v]) => v.preserve),
+    ),
+  };
 }
 
 type Command = {
