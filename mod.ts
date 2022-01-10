@@ -1,3 +1,7 @@
+export function defineCommand(command: Command): Command {
+  return command;
+}
+
 type Command = {
   name: string;
   usage?: string;
