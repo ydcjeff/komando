@@ -30,6 +30,36 @@ export function defineCommand(command: Command): Command {
 }
 
 function run(resolved: ResolvedKomandoOptions, argv: Args) {
+  const { _: inputArgs, ...inputFlags } = argv;
+  const { name, version } = resolved;
+  let { commands, flags, args, run } = resolved;
+
+  if ((inputFlags.version || inputFlags.V) && version) {
+    console.log(`${name}@${version}`);
+    return;
+  }
+
+  // filter out the matched commands
+  let hasSubCommands = false;
+  do {
+    // reset here
+    hasSubCommands = false;
+    for (const cmd of commands) {
+      const val = inputArgs[0];
+
+      if (cmd.name === val || cmd.aliases?.includes(val as string)) {
+        commands = cmd.commands as Command[];
+        flags = resolveFlags(flags, cmd.flags);
+        args = cmd.args as Arg;
+        run = cmd.run;
+        inputArgs.shift();
+        hasSubCommands = !!cmd.commands;
+        break;
+      }
+    }
+  } while (hasSubCommands);
+
+  console.log(inputArgs);
 }
 
 type Command = {
