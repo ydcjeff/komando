@@ -1,0 +1,4 @@
+#!/bin/sh
+
+deno fmt -c deno.jsonc
+deno lint -c deno.jsonc
