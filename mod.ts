@@ -58,6 +58,15 @@ function run(resolved: ResolvedKomandoOptions, argv: Args) {
       }
     }
   } while (hasSubCommands);
+
+  for (const iflag in inputFlags) {
+    const val = inputFlags[iflag];
+    if (iflag in flags) {
+      flags[iflag] = val;
+    } else {
+      throw new Error(`Unknown flag: ${iflag} with value ${val}`);
+    }
+  }
 }
 
 function resolveFlags(parent: Flag, child?: Flag): Flag {
