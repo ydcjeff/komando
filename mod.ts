@@ -22,14 +22,14 @@ export function komando(opt: KomandoOptions, argv: string[] = Deno.args) {
     };
   }
 
-  run(resolved, parse(argv));
+  build(resolved, parse(argv));
 }
 
 export function defineCommand(command: Command): Command {
   return command;
 }
 
-function run(resolved: ResolvedKomandoOptions, argv: Args) {
+function build(resolved: ResolvedKomandoOptions, argv: Args) {
   const { _: inputArgs, ...inputFlags } = argv;
   const { name, version } = resolved;
   let { commands, flags, args, run } = resolved;
@@ -67,6 +67,8 @@ function run(resolved: ResolvedKomandoOptions, argv: Args) {
       throw new Error(`Unknown flag: ${iflag} with value ${val}`);
     }
   }
+
+  if (run) run(flags)
 }
 
 function resolveFlags(parent: Flag, child?: Flag): Flag {
@@ -87,7 +89,7 @@ type Command = {
   commands?: Command[];
   flags?: Flag;
   args?: Arg;
-  run?: () => void;
+  run?: (flags: Flag) => void;
 };
 
 type KomandoOptions = Omit<Command, 'alias'> & {
