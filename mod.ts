@@ -3,24 +3,10 @@ import { parse } from 'https://deno.land/std@0.120.0/flags/mod.ts';
 export function komando(opt: KomandoOptions, argv: string[] = Deno.args) {
   const resolved: ResolvedKomandoOptions = {
     commands: [],
-    flags: {
-      help: {
-        help: 'Show this message',
-        alias: 'h',
-        preserve: true,
-      },
-    },
+    flags: {},
     args: {},
     ...opt,
   };
-
-  if (opt.version) {
-    resolved.flags.version = {
-      help: 'Show version info',
-      alias: 'V',
-      preserve: true,
-    };
-  }
 
   build(resolved, argv);
 }
@@ -63,7 +49,7 @@ function build(resolved: ResolvedKomandoOptions, argv: string[]) {
   }
 
   const unknowns: Record<string, unknown> = {};
-  const { flags, run } = currentCommand;
+  const { flags, args, run } = currentCommand;
   const { _: inputArgs, ...inputFlags } = parse(argv, {
     alias: Object.fromEntries(
       Object.entries(flags).map(([k, v]) => [k, v.alias ?? `__${k}__`]), // hack to skip unknownFn
@@ -72,8 +58,11 @@ function build(resolved: ResolvedKomandoOptions, argv: string[]) {
       Object.entries(flags).map(([k, v]) => [k, v.default ?? undefined]),
     ),
     unknown(arg, _, v) {
-      unknowns[arg] = v;
-      return false;
+      // only collect unknown flags
+      if (arg.startsWith('-')) {
+        unknowns[arg] = v;
+        return false;
+      }
     },
   });
 
@@ -89,7 +78,30 @@ function build(resolved: ResolvedKomandoOptions, argv: string[]) {
     }
   }
 
-  if (run) run(flags);
+  const rArgs: Record<string, unknown> = {};
+  for (const arg in args) {
+    const nargs = args[arg].nargs;
+
+    if (nargs === '?') {
+      rArgs[arg] = inputArgs.shift();
+    } else if (nargs === '*') {
+      rArgs[arg] = [...inputArgs];
+      break;
+    } else if (nargs === '+') {
+      if (inputArgs.length < 1) {
+        throw new Error(`Argument ${arg} expected at least one argument`);
+      }
+      rArgs[arg] = [...inputArgs];
+      break;
+    } else if (typeof nargs === 'number') {
+      if (inputArgs.length < nargs) {
+        throw new Error(`Argument ${arg} expected ${nargs} argument(s).`);
+      }
+      rArgs[arg] = nargs === 1 ? inputArgs.shift() : inputArgs.splice(0, nargs);
+    }
+  }
+
+  if (run) run(rArgs, flags);
 }
 
 function showHelp(bin: string, command: CurrentCommand) {
@@ -181,7 +193,7 @@ type Command = {
   commands?: Command[];
   flags?: Flag;
   args?: Arg;
-  run?: (flags: Flag) => void;
+  run?: (args: Record<string, unknown>, flags: Record<string, unknown>) => void;
 };
 
 type CurrentCommand = RequireOnly<Command, 'commands' | 'flags'>;

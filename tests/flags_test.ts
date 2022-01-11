@@ -9,11 +9,11 @@ test('no help in flags', () => {
   komando({
     name: NAME,
     version: VERSION,
-    run(flags) {
-      assertEquals(flags, {})
-    }
-  }, [])
-})
+    run(_, flags) {
+      assertEquals(flags, {});
+    },
+  }, []);
+});
 
 test('root long flags', () => {
   komando({
@@ -27,7 +27,7 @@ test('root long flags', () => {
         help: 'flagB help',
       },
     },
-    run(flags) {
+    run(_, flags) {
       assertEquals(flags.flagA, 'abc');
       assertEquals(flags.flagB, 123);
     },
@@ -48,7 +48,7 @@ test('root short flags', () => {
         help: 'flagB help',
       },
     },
-    run(flags) {
+    run(_, flags) {
       assertEquals(flags.flagA, 'abc');
       assertEquals(flags.flagB, 123);
     },
@@ -72,7 +72,7 @@ test('command long flags', () => {
         },
       },
     ],
-    run(flags) {
+    run(_, flags) {
       assertEquals(flags.flagA, 'abc');
       assertEquals(flags.flagB, 123);
     },
@@ -98,7 +98,7 @@ test('command short flags', () => {
         },
       },
     ],
-    run(flags) {
+    run(_, flags) {
       assertEquals(flags.flagA, 'abc');
       assertEquals(flags.flagB, 124);
     },
