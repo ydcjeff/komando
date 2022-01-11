@@ -31,6 +31,7 @@ export function defineCommand(command: Command): Command {
 
 function build(resolved: ResolvedKomandoOptions, argv: string[]) {
   let { commands, flags, args, run } = resolved;
+  argv = [...argv]; // Deno.args is read only, copy it
 
   // filter out the matched commands
   let hasSubCommands = false;
@@ -59,13 +60,13 @@ function build(resolved: ResolvedKomandoOptions, argv: string[]) {
     default: Object.fromEntries(
       Object.entries(flags).map(([k, v]) => [k, v.default ?? undefined]),
     ),
-    unknown: (arg, _, v) => {
+    unknown(arg, _, v) {
       unknowns[arg] = v;
       return false;
     },
   });
 
-  if (!unknowns) {
+  if (Object.keys(unknowns).length) {
     console.table(unknowns);
     throw new Error('Unknown flags found. See the above table.');
   }
