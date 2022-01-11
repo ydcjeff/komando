@@ -36,7 +36,7 @@ function build(resolved: ResolvedKomandoOptions, argv: string[]) {
     return;
   }
 
-  let { commands, flags, args, run } = resolved;
+  let currentCommand: CurrentCommand = resolved;
   argv = [...argv]; // Deno.args is read only, copy it
 
   // filter out the matched commands
@@ -44,13 +44,12 @@ function build(resolved: ResolvedKomandoOptions, argv: string[]) {
   do {
     // reset here
     hasSubCommands = false;
-    for (const cmd of commands) {
+    for (const cmd of currentCommand.commands) {
       const val = argv[0];
       if (cmd.name === val || cmd.aliases?.includes(val as string)) {
-        commands = cmd.commands as Command[];
-        flags = resolveFlags(flags, cmd.flags);
-        args = cmd.args as Arg;
-        run = cmd.run;
+        const flags = resolveFlags(currentCommand.flags, cmd.flags);
+        currentCommand = cmd as CurrentCommand;
+        currentCommand.flags = flags;
         argv.shift();
         hasSubCommands = !!cmd.commands;
         break;
@@ -58,12 +57,13 @@ function build(resolved: ResolvedKomandoOptions, argv: string[]) {
     }
   } while (hasSubCommands);
 
-  if ((argv.includes('-h') || argv.includes('--help'))) {
-    showHelp(name, commands, flags, args);
+  if (argv.includes('-h') || argv.includes('--help')) {
+    showHelp(name, currentCommand);
     return;
   }
 
   const unknowns: Record<string, unknown> = {};
+  const { flags, run } = currentCommand;
   const { _: inputArgs, ...inputFlags } = parse(argv, {
     alias: Object.fromEntries(
       Object.entries(flags).map(([k, v]) => [k, v.alias ?? `__${k}__`]), // hack to skip unknownFn
@@ -92,7 +92,75 @@ function build(resolved: ResolvedKomandoOptions, argv: string[]) {
   if (run) run(flags);
 }
 
-function showHelp(bin: string, commands: Command[], flags: Flag, args: Arg) {
+function showHelp(bin: string, command: CurrentCommand) {
+  let help = '';
+
+  if (command.description) {
+    help += `  ${command.description}\n\n`;
+  }
+
+  if (command.usage) {
+    help += `  Usage:\n    ${command.usage}\n\n`;
+  }
+
+  if (command.commands) {
+    help += `  Commands:\n`;
+
+    for (const cmd of command.commands) {
+      help += `    ${cmd.name}`;
+
+      if (cmd.description) {
+        help += `    ${cmd.description}`;
+      }
+
+      help += '\n';
+    }
+
+    help += '\n';
+  }
+
+  if (command.flags) {
+    help += `  Flags:\n`;
+
+    for (const flag in command.flags) {
+      const val = command.flags[flag];
+
+      help += '    ';
+
+      if (val.alias) {
+        help += `-${val.alias}, `;
+      }
+
+      help += `--${flag}`.padEnd(12);
+
+      if (val.help) {
+        help += `    ${val.help}`;
+      }
+
+      help += '\n';
+    }
+
+    help += '\n';
+  }
+
+  if (command.args) {
+    help += `  Args:\n`;
+
+    for (const arg in command.args) {
+      const val = command.args[arg];
+
+      help += `    ${arg}`;
+
+      if (val.help) {
+        help += `    ${val.help}`;
+      }
+
+      help += '\n';
+    }
+    help += '\n';
+  }
+
+  console.log(help);
 }
 
 function resolveFlags(parent: Flag, child?: Flag): Flag {
@@ -115,6 +183,8 @@ type Command = {
   args?: Arg;
   run?: (flags: Flag) => void;
 };
+
+type CurrentCommand = RequireOnly<Command, 'commands' | 'flags'>;
 
 type KomandoOptions = Omit<Command, 'alias'> & {
   version: string;
