@@ -30,6 +30,12 @@ export function defineCommand(command: Command): Command {
 }
 
 function build(resolved: ResolvedKomandoOptions, argv: string[]) {
+  const { name, version } = resolved;
+  if ((argv.includes('-V') || argv.includes('--version')) && version) {
+    console.log(`${name}@${version}`);
+    return;
+  }
+
   let { commands, flags, args, run } = resolved;
   argv = [...argv]; // Deno.args is read only, copy it
 
@@ -52,6 +58,11 @@ function build(resolved: ResolvedKomandoOptions, argv: string[]) {
     }
   } while (hasSubCommands);
 
+  if ((argv.includes('-h') || argv.includes('--help'))) {
+    showHelp(name, commands, flags, args);
+    return;
+  }
+
   const unknowns: Record<string, unknown> = {};
   const { _: inputArgs, ...inputFlags } = parse(argv, {
     alias: Object.fromEntries(
@@ -71,12 +82,6 @@ function build(resolved: ResolvedKomandoOptions, argv: string[]) {
     throw new Error('Unknown flags found. See the above table.');
   }
 
-  const { name, version } = resolved;
-  if ((inputFlags.version || inputFlags.V) && version) {
-    console.log(`${name}@${version}`);
-    return;
-  }
-
   for (const iflag in inputFlags) {
     const val = inputFlags[iflag];
     if (iflag in flags) {
@@ -85,6 +90,9 @@ function build(resolved: ResolvedKomandoOptions, argv: string[]) {
   }
 
   if (run) run(flags);
+}
+
+function showHelp(bin: string, commands: Command[], flags: Flag, args: Arg) {
 }
 
 function resolveFlags(parent: Flag, child?: Flag): Flag {
