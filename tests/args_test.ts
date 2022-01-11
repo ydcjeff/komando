@@ -14,11 +14,9 @@ test('? nargs', () => {
     version: VERSION,
     args: {
       argA: {
-        help: 'arg a help',
         nargs: '?',
       },
       argB: {
-        help: 'arg b help',
         nargs: '?',
       },
     },
@@ -35,11 +33,9 @@ test('? nargs - empty argv', () => {
     version: VERSION,
     args: {
       argA: {
-        help: 'arg a help',
         nargs: '?',
       },
       argB: {
-        help: 'arg b help',
         nargs: '?',
       },
     },
@@ -56,11 +52,9 @@ test('* nargs', () => {
     version: VERSION,
     args: {
       argA: {
-        help: 'arg a help',
         nargs: '*',
       },
       argB: {
-        help: 'arg b help',
         nargs: '*',
       },
     },
@@ -77,11 +71,9 @@ test('* nargs - empty argv', () => {
     version: VERSION,
     args: {
       argA: {
-        help: 'arg a help',
         nargs: '*',
       },
       argB: {
-        help: 'arg b help',
         nargs: '*',
       },
     },
@@ -98,11 +90,9 @@ test('+ nargs', () => {
     version: VERSION,
     args: {
       argA: {
-        help: 'arg a help',
         nargs: '+',
       },
       argB: {
-        help: 'arg b help',
         nargs: '+',
       },
     },
@@ -121,11 +111,9 @@ test('+ nargs expected at least one argument', () => {
         version: VERSION,
         args: {
           argA: {
-            help: 'arg a help',
             nargs: '+',
           },
           argB: {
-            help: 'arg b help',
             nargs: '+',
           },
         },
@@ -142,11 +130,9 @@ test('1 nargs', () => {
     version: VERSION,
     args: {
       argA: {
-        help: 'arg a help',
         nargs: 1,
       },
       argB: {
-        help: 'arg b help',
         nargs: 2,
       },
     },
@@ -165,11 +151,9 @@ test('1 nargs expected 1 arguments', () => {
         version: VERSION,
         args: {
           argA: {
-            help: 'arg a help',
             nargs: '?',
           },
           argB: {
-            help: 'arg b help',
             nargs: 1,
           },
         },
@@ -186,11 +170,9 @@ test('2 nargs', () => {
     version: VERSION,
     args: {
       argA: {
-        help: 'arg a help',
         nargs: 2,
       },
       argB: {
-        help: 'arg b help',
         nargs: 2,
       },
     },
@@ -209,11 +191,9 @@ test('2 nargs expected 2 arguments', () => {
         version: VERSION,
         args: {
           argA: {
-            help: 'arg a help',
             nargs: '?',
           },
           argB: {
-            help: 'arg b help',
             nargs: 2,
           },
         },

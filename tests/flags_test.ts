@@ -1,5 +1,5 @@
 import { assertEquals } from 'https://deno.land/std@0.120.0/testing/asserts.ts';
-import { komando } from '../mod.ts';
+import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;
 const NAME = 'test';
@@ -20,12 +20,8 @@ test('root long flags', () => {
     name: NAME,
     version: VERSION,
     flags: {
-      flagA: {
-        help: 'flagA help',
-      },
-      flagB: {
-        help: 'flagB help',
-      },
+      flagA: {},
+      flagB: {},
     },
     run(_, flags) {
       assertEquals(flags.flagA, 'abc');
@@ -39,14 +35,8 @@ test('root short flags', () => {
     name: NAME,
     version: VERSION,
     flags: {
-      flagA: {
-        alias: 'A',
-        help: 'flagA help',
-      },
-      flagB: {
-        alias: 'B',
-        help: 'flagB help',
-      },
+      flagA: { alias: 'A' },
+      flagB: { alias: 'B' },
     },
     run(_, flags) {
       assertEquals(flags.flagA, 'abc');
@@ -60,17 +50,13 @@ test('command long flags', () => {
     name: NAME,
     version: VERSION,
     commands: [
-      {
+      defineCommand({
         name: 'test',
         flags: {
-          flagA: {
-            help: 'flagA help',
-          },
-          flagB: {
-            help: 'flagB help',
-          },
+          flagA: {},
+          flagB: {},
         },
-      },
+      }),
     ],
     run(_, flags) {
       assertEquals(flags.flagA, 'abc');
@@ -84,19 +70,13 @@ test('command short flags', () => {
     name: NAME,
     version: VERSION,
     commands: [
-      {
+      defineCommand({
         name: 'test',
         flags: {
-          flagA: {
-            alias: 'A',
-            help: 'flagA help',
-          },
-          flagB: {
-            alias: 'B',
-            help: 'flagB help',
-          },
+          flagA: { alias: 'A' },
+          flagB: { alias: 'B' },
         },
-      },
+      }),
     ],
     run(_, flags) {
       assertEquals(flags.flagA, 'abc');

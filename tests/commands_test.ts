@@ -1,5 +1,5 @@
 import { assert } from 'https://deno.land/std@0.120.0/testing/asserts.ts';
-import { komando } from '../mod.ts';
+import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;
 const NAME = 'test';
@@ -20,12 +20,12 @@ test('dev command', () => {
     name: NAME,
     version: VERSION,
     commands: [
-      {
+      defineCommand({
         name: 'dev',
         run() {
           assert(true);
         },
-      },
+      }),
     ],
   }, ['dev']);
 });
@@ -35,13 +35,13 @@ test('dev command alias', () => {
     name: NAME,
     version: VERSION,
     commands: [
-      {
+      defineCommand({
         name: 'dev',
         aliases: ['d'],
         run() {
           assert(true);
         },
-      },
+      }),
     ],
   }, ['d']);
 });
