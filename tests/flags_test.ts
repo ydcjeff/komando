@@ -1,9 +1,19 @@
-import { assertStrictEquals } from 'https://deno.land/std@0.120.0/testing/asserts.ts';
+import { assertEquals } from 'https://deno.land/std@0.120.0/testing/asserts.ts';
 import { komando } from '../mod.ts';
 
 const { test } = Deno;
 const NAME = 'test';
 const VERSION = 'v0.0.0';
+
+test('no help in flags', () => {
+  komando({
+    name: NAME,
+    version: VERSION,
+    run(flags) {
+      assertEquals(flags, {})
+    }
+  }, [])
+})
 
 test('root long flags', () => {
   komando({
@@ -18,8 +28,8 @@ test('root long flags', () => {
       },
     },
     run(flags) {
-      assertStrictEquals(flags.flagA, 'abc');
-      assertStrictEquals(flags.flagB, 123);
+      assertEquals(flags.flagA, 'abc');
+      assertEquals(flags.flagB, 123);
     },
   }, ['--flagA', 'abc', '--flagB', '123']);
 });
@@ -39,8 +49,8 @@ test('root short flags', () => {
       },
     },
     run(flags) {
-      assertStrictEquals(flags.flagA, 'abc');
-      assertStrictEquals(flags.flagB, 123);
+      assertEquals(flags.flagA, 'abc');
+      assertEquals(flags.flagB, 123);
     },
   }, ['-A', 'abc', '-B', '123']);
 });
@@ -63,8 +73,8 @@ test('command long flags', () => {
       },
     ],
     run(flags) {
-      assertStrictEquals(flags.flagA, 'abc');
-      assertStrictEquals(flags.flagB, 123);
+      assertEquals(flags.flagA, 'abc');
+      assertEquals(flags.flagB, 123);
     },
   }, ['test', '--flagA', 'abc', '--flagB', '123']);
 });
@@ -89,8 +99,8 @@ test('command short flags', () => {
       },
     ],
     run(flags) {
-      assertStrictEquals(flags.flagA, 'abc');
-      assertStrictEquals(flags.flagB, 124);
+      assertEquals(flags.flagA, 'abc');
+      assertEquals(flags.flagB, 124);
     },
   }, ['test', '-A', 'abc', '-B', '123']);
 });
