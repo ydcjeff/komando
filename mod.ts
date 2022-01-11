@@ -2,6 +2,8 @@ import { parse } from 'https://deno.land/std@0.120.0/flags/mod.ts';
 
 export function komando(opt: UserKomandoOptions, argv: string[] = Deno.args) {
   const resolved = defineCommand(opt);
+  // even though `resolved` is Command type,
+  // it already has `version`, so pass with as KomandoOptions.
   komandoImpl(resolved as KomandoOptions, argv);
 }
 
