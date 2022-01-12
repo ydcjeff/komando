@@ -91,6 +91,7 @@ test('unknown flags found', () => {
       komando({
         name: 'unknown',
         flags: { known: {} },
+        run() {},
       }, ['--unknown']);
     },
     Error,

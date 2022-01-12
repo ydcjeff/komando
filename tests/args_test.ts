@@ -114,6 +114,7 @@ test('+ nargs expected at least one argument', () => {
             nargs: '+',
           },
         },
+        run() {},
       }, []);
     },
     Error,
@@ -154,6 +155,7 @@ test('1 nargs expected 1 arguments', () => {
             nargs: 1,
           },
         },
+        run() {},
       }, []);
     },
     Error,
@@ -194,6 +196,7 @@ test('2 nargs expected 2 arguments', () => {
             nargs: 2,
           },
         },
+        run() {},
       }, []);
     },
     Error,

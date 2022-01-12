@@ -1,4 +1,4 @@
-import { assert } from '../deps.ts';
+import { assert, assertThrows } from '../deps.ts';
 import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;
@@ -13,6 +13,20 @@ test('root command', () => {
       assert(true);
     },
   }, []);
+});
+
+test('root command no aliases', () => {
+  assertThrows(
+    () => {
+      komando({
+        name: NAME,
+        version: VERSION,
+        aliases: [],
+      });
+    },
+    Error,
+    'root command should not have aliases',
+  );
 });
 
 test('dev command', () => {
