@@ -1,5 +1,157 @@
 import { parse } from './deps.ts';
 
+type Command = {
+  /**
+   * The name of the command.
+   *
+   * @example 'komando'
+   */
+  name: string;
+  /**
+   * Version number of this CLI app. This is not used in subcommands.
+   *
+   * @default undefined
+   * @example 'v1.0.0'
+   */
+  version?: string;
+  /**
+   * Command usage.
+   *
+   * @default undefined
+   * @example '$ komando [command] [flags]'
+   */
+  usage?: string;
+  /**
+   * Command description.
+   *
+   * @default undefined
+   * @example 'Type first and safe CLI app builder for Deno'
+   */
+  description?: string;
+  /**
+   * Examples of command usages.
+   * For multiple examples, pass the value as string template.
+   *
+   * @default undefined
+   */
+  example?: string;
+  /**
+   * Command aliases. This is only used in subcommands.
+   * Root command should not have defined `aliases`.
+   *
+   * @default undefined
+   * @example ['i', 'isntall']
+   */
+  aliases?: string[];
+  /**
+   * Sub-commands of this command.
+   *
+   * @default []
+   */
+  commands: Command[];
+  /**
+   * Options and flags for this command.
+   *
+   * @default {}
+   */
+  flags: Flags;
+  /**
+   * Positional arguments for this command.
+   *
+   * @default {}
+   */
+  args: Args;
+  /**
+   * Function to run when this command is found in `Deno.args`. When the
+   * respective `run` function is undefined, help message will be shown instead.
+   *
+   * @default undefined
+   */
+  run?: (args: Record<string, unknown>, flags: Record<string, unknown>) => void;
+  /**
+   * Group this command under this title name in help message.
+   *
+   * @default 'COMMANDS'
+   * @example 'CORE COMMANDS'
+   */
+  title?: string;
+};
+
+type UserCommand = RequireOnly<Partial<Command>, 'name'>;
+
+type RequireOnly<T, Keys extends keyof T> =
+  & Pick<T, Exclude<keyof T, Keys>>
+  & {
+    [K in Keys]-?: T[K];
+  };
+
+type Flag = {
+  /**
+   * Flag description
+   *
+   * @default undefined
+   */
+  description?: string;
+  /**
+   * Short flag. Unlike command aliases, short flag has to be a single string.
+   *
+   * @default undefined
+   * @example '-c'
+   */
+  short?: string;
+  /**
+   * Default value of this flag.
+   *
+   * @default undefined
+   * @example 'deno.jsonc'
+   */
+  defaultV?: unknown;
+  /**
+   * Whether this flag should be passed deeply to all sub-commands' flags.
+   *
+   * @default false
+   */
+  deepPass?: boolean;
+  /**
+   * The placeholder to appear in the help message.
+   * It defaults to the flag name.
+   *
+   * @default <flag-name>
+   * @example 'config-file'
+   */
+  placeholder?: string;
+  /**
+   * Group this command under this title name in help message.
+   *
+   * @default 'FLAGS'
+   * @example 'RUNTIME FLAGS'
+   */
+  title?: string;
+};
+
+type Flags = {
+  [long: string]: Flag;
+};
+
+type Arg = {
+  /**
+   * Number of values this argument requires.
+   *
+   * @default 1
+   */
+  nargs?: number | '?' | '*' | '+';
+  /**
+   * Argument description.
+   *
+   * @default undefined
+   */
+  description?: string;
+};
+
+type Args = {
+  [long: string]: Arg;
+};
+
 export function komando(rootCommand: UserCommand, argv: string[] = Deno.args) {
   const resolved = defineCommand(rootCommand);
   komandoImpl(resolved, argv);
@@ -232,133 +384,3 @@ function resolveFlags(parent: Flags, child?: Flags): Flags {
     ),
   };
 }
-
-type Command = {
-  /**
-   * The name of the command.
-   */
-  name: string;
-  /**
-   * Version number of this CLI app. This is not used in subcommands.
-   */
-  version?: string;
-  /**
-   * Command usage.
-   *
-   * @default undefined
-   */
-  usage?: string;
-  /**
-   * Command description.
-   *
-   * @default undefined
-   */
-  description?: string;
-  /**
-   * Examples of command usages.
-   * For multiple examples, pass the value as string template.
-   *
-   * @default undefined
-   */
-  example?: string;
-  /**
-   * Command aliases. This is only used in subcommands.
-   * Root command should not have defined `aliases`.
-   *
-   * @default undefined
-   */
-  aliases?: string[];
-  /**
-   * Sub-commands of this command.
-   *
-   * @default []
-   */
-  commands: Command[];
-  /**
-   * Options and flags for this command.
-   *
-   * @default {}
-   */
-  flags: Flags;
-  /**
-   * Positional arguments for this command.
-   *
-   * @default {}
-   */
-  args: Args;
-  /**
-   * Function to run when this command is found in `Deno.args`.
-   */
-  run?: (args: Record<string, unknown>, flags: Record<string, unknown>) => void;
-  /**
-   * Group this command under this title name in help message.
-   */
-  title?: string;
-};
-
-type UserCommand = RequireOnly<Partial<Command>, 'name'>;
-
-type RequireOnly<T, Keys extends keyof T> =
-  & Pick<T, Exclude<keyof T, Keys>>
-  & {
-    [K in Keys]-?: T[K];
-  };
-
-type Flag = {
-  /**
-   * Flag description
-   *
-   * @default undefined
-   */
-  description?: string;
-  /**
-   * Short flag. Unlike command aliases, short flag has to be a single string.
-   *
-   * @default undefined
-   */
-  short?: string;
-  /**
-   * Default value of this flag.
-   *
-   * @default undefined
-   */
-  defaultV?: unknown;
-  /**
-   * Whether this flag should be passed deeply to all sub-commands' flags.
-   *
-   * @default false
-   */
-  deepPass?: boolean;
-  /**
-   * The placeholder to appear in the help message.
-   * It defaults to the flag name.
-   *
-   * @default <flag-name>
-   */
-  placeholder?: string;
-  /**
-   * Group this command under this title name in help message.
-   */
-  title?: string;
-};
-
-type Flags = {
-  [long: string]: Flag;
-};
-
-type Arg = {
-  /**
-   * Number of values this argument requires.
-   *
-   * @default 1
-   */
-  nargs?: number | '?' | '*' | '+';
-  /**
-   * Argument description.
-   */
-  description?: string;
-};
-
-type Args = {
-  [long: string]: Arg;
-};
