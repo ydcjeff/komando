@@ -65,7 +65,7 @@ function komandoImpl(resolved: KomandoOptions, argv: string[]) {
   const { flags, args, run } = currentCommand;
   const { _: inputArgs, ...inputFlags } = parse(argv, {
     alias: Object.fromEntries(
-      Object.entries(flags).map(([k, v]) => [k, v.alias ?? `__${k}__`]), // hack to skip unknownFn
+      Object.entries(flags).map(([k, v]) => [k, v.alias ?? toKebabCase(k)]),
     ),
     default: Object.fromEntries(
       Object.entries(flags).map(([k, v]) => [k, v.default ?? undefined]),
@@ -115,6 +115,11 @@ function komandoImpl(resolved: KomandoOptions, argv: string[]) {
   }
 
   if (run) run(rArgs, flags);
+}
+
+const camelCasePattern = /\B([A-Z])/g;
+function toKebabCase(str: string) {
+  return str.replace(camelCasePattern, '-$1').toLowerCase();
 }
 
 function showHelp(bin: string, command: Command) {
@@ -254,6 +259,9 @@ type Command = {
 type UserCommand = RequireOnly<Partial<Command>, 'name'>;
 
 type UserKomandoOptions = Omit<UserCommand, 'aliases'> & {
+  /**
+   * Version number of this CLI app
+   */
   version: string;
 };
 
