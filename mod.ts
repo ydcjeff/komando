@@ -153,6 +153,9 @@ type Args = {
 };
 
 export function komando(rootCommand: UserCommand, argv: string[] = Deno.args) {
+  if (rootCommand.aliases) {
+    throw new Error('root command should not have aliases.');
+  }
   const resolved = defineCommand(rootCommand);
   komandoImpl(resolved, argv);
 }
@@ -165,8 +168,8 @@ export function defineCommand(command: UserCommand): Command {
     ...command,
   };
 
-  groupBy('COMMANDS', resolved.commands);
-  groupBy('FLAGS', resolved.flags);
+  groupBy('Commands', resolved.commands);
+  groupBy('Flags', resolved.flags);
 
   for (const key in resolved.flags) {
     const val = resolved.flags[key];
@@ -285,13 +288,14 @@ function toKebabCase(str: string) {
 
 function showHelp(bin: string, command: Command, version?: string) {
   const out: Record<string, string | string[]> = {};
-  const { description, example, commands, flags, args, usage } = command;
+  const { description, example, commands, flags, args, usage, aliases } =
+    command;
   flags.help = {
     short: 'h',
     description: 'Show this message',
     deepPass: true,
     defaultV: false,
-    title: 'FLAGS',
+    title: 'Flags',
   };
   if (version) {
     flags.version = {
@@ -299,7 +303,7 @@ function showHelp(bin: string, command: Command, version?: string) {
       defaultV: false,
       deepPass: true,
       description: 'Show version info',
-      title: 'FLAGS',
+      title: 'Flags',
     };
   }
 
@@ -309,10 +313,11 @@ function showHelp(bin: string, command: Command, version?: string) {
     out[title] += '\n' + indent(body);
   };
 
-  if (description) fmt('DESCRIPTION', description);
+  if (description) fmt('Description', description);
+  if (aliases?.length) fmt('Aliases', aliases.join(', '));
 
   fmt(
-    'USAGE',
+    'Usage',
     usage
       ? `${usage}`
       : `$ ${bin} ${commands ? '[command]' : ''} ${args ? '[args]' : ''} ${
@@ -320,7 +325,7 @@ function showHelp(bin: string, command: Command, version?: string) {
       }`,
   );
 
-  if (example) fmt('EXAMPLE', example);
+  if (example) fmt('Example', example);
 
   const maxLen = Math.max(
     ...Object.entries(flags).map(([k, v]) => {
@@ -367,12 +372,12 @@ function showHelp(bin: string, command: Command, version?: string) {
         : arg;
       temp += ' '.padEnd(maxLen - temp.length);
       if (description) temp += description;
-      fmt('ARGS', temp);
+      fmt('Args', temp);
     }
   }
 
   for (const key in out) {
-    console.log('\n  ', key, out[key]);
+    console.log('\n  ' + key + out[key]);
   }
 }
 
