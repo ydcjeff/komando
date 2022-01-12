@@ -1,4 +1,4 @@
-import { assertEquals } from 'https://deno.land/std@0.120.0/testing/asserts.ts';
+import { assertEquals, assertThrows } from 'https://deno.land/std@0.120.0/testing/asserts.ts';
 import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;
@@ -84,3 +84,12 @@ test('command short flags', () => {
     },
   }, ['test', '-A', 'abc', '-B', '123']);
 });
+
+test('unknown flags found', () => {
+  assertThrows(() => {
+    komando({
+      name: 'unknown',
+      flags: { known: {} }
+    }, ['--unknown'])
+  }, Error, 'Unknown flags found. See the above table.')
+})
