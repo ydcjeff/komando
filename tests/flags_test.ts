@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from '../deps.ts';
+import { assert, assertEquals, assertThrows } from '../deps.ts';
 import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;
@@ -96,4 +96,24 @@ test('unknown flags found', () => {
     Error,
     'Unknown flags found. See the above table.',
   );
+});
+
+test('kebab case long flags', () => {
+  komando({
+    name: import.meta.url,
+    flags: { camelCase: {} },
+    run(_, flags) {
+      assert(flags.camelCase);
+    },
+  }, ['--camel-case']);
+});
+
+test('kebab case short flags', () => {
+  komando({
+    name: import.meta.url,
+    flags: { camelCase: { alias: 'C' } },
+    run(_, flags) {
+      assert(flags.camelCase);
+    },
+  }, ['-C']);
 });

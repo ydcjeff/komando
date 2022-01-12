@@ -62,7 +62,9 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
   const { flags, args, run } = currentCommand;
   const { _: inputArgs, ...inputFlags } = parse(argv, {
     alias: Object.fromEntries(
-      Object.entries(flags).map(([k, v]) => [k, v.alias ?? toKebabCase(k)]),
+      Object.entries(flags).map((
+        [k, v],
+      ) => [k, [toKebabCase(k), v.alias ?? '']]),
     ),
     default: Object.fromEntries(
       Object.entries(flags).map(([k, v]) => [k, v.default ?? undefined]),
