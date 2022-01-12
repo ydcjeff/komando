@@ -320,9 +320,9 @@ function showHelp(bin: string, command: Command, version?: string) {
     'Usage',
     usage
       ? `${usage}`
-      : `$ ${bin} ${commands ? '[command]' : ''} ${args ? '[args]' : ''} ${
-        flags ? '[flags]' : ''
-      }`,
+      : `$ ${bin}${commands.length ? ' [command]' : ''}${
+        Object.keys(args).length ? ' [args]' : ''
+      }${Object.keys(flags).length ? ' [flags]' : ''}`,
   );
 
   if (example) fmt('Example', example);

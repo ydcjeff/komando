@@ -1,9 +1,33 @@
-import { assert, assertEquals, assertThrows } from '../deps.ts';
+import { assert, assertEquals, assertThrows, spyOn, restoreAll } from '../deps.ts';
 import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;
 const NAME = 'test';
 const VERSION = 'v0.0.0';
+
+test('version -V flag', () => {
+  const spy = spyOn(console, 'log')
+  komando({
+    name: 'flags_test',
+    version: 'v1.0.0'
+  }, ['-V'])
+  assert(spy.called)
+  assertEquals(spy.callCount, 1)
+  assertEquals(spy.calls[0][0], 'flags_test@v1.0.0')
+  restoreAll()
+})
+
+test('version --version flag', () => {
+  const spy = spyOn(console, 'log')
+  komando({
+    name: 'flags_test',
+    version: 'v1.0.0'
+  }, ['--version'])
+  assert(spy.called)
+  assertEquals(spy.callCount, 1)
+  assertEquals(spy.calls[0][0], 'flags_test@v1.0.0')
+  restoreAll()
+})
 
 test('no help in flags', () => {
   komando({
