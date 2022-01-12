@@ -13,6 +13,9 @@ export function defineCommand(command: UserCommand): Command {
     ...command,
   };
 
+  groupBy('COMMANDS', resolved.commands);
+  groupBy('FLAGS', resolved.flags);
+
   for (const key in resolved.flags) {
     const val = resolved.flags[key];
     if (!val.placeholder) val.placeholder = key;
@@ -24,6 +27,13 @@ export function defineCommand(command: UserCommand): Command {
   }
 
   return resolved;
+}
+
+export function groupBy(title: string, toGroup: Command[] | Flags) {
+  for (const val of Object.values(toGroup) as Command[] | Flag[]) {
+    if (!val.title) val.title = title;
+  }
+  return toGroup;
 }
 
 function komandoImpl(currentCommand: Command, argv: string[]) {
@@ -54,7 +64,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
   } while (hasSubCommands);
 
   if (argv.includes('-h') || argv.includes('--help')) {
-    showHelp(name, currentCommand);
+    showHelp(name, currentCommand, version);
     return;
   }
 
@@ -67,7 +77,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
       ) => [k, [toKebabCase(k), v.short ?? '']]),
     ),
     default: Object.fromEntries(
-      Object.entries(flags).map(([k, v]) => [k, v.default ?? undefined]),
+      Object.entries(flags).map(([k, v]) => [k, v.defaultV ?? undefined]),
     ),
     unknown(arg, _, v) {
       // only collect unknown flags
@@ -121,75 +131,97 @@ function toKebabCase(str: string) {
   return str.replace(camelCasePattern, '-$1').toLowerCase();
 }
 
-function showHelp(bin: string, command: Command) {
-  let help = '';
-
-  if (command.description) {
-    help += `  ${command.description}\n\n`;
+function showHelp(bin: string, command: Command, version?: string) {
+  const out: Record<string, string | string[]> = {};
+  const { description, example, commands, flags, args, usage } = command;
+  flags.help = {
+    short: 'h',
+    description: 'Show this message',
+    deepPass: true,
+    defaultV: false,
+    title: 'FLAGS',
+  };
+  if (version) {
+    flags.version = {
+      short: 'V',
+      defaultV: false,
+      deepPass: true,
+      description: 'Show version info',
+      title: 'FLAGS',
+    };
   }
 
-  if (command.usage) {
-    help += `  Usage:\n    ${command.usage}\n\n`;
-  }
+  const indent = (str: string) => '    ' + str;
+  const fmt = (title: string, body: string) => {
+    if (!out[title]) out[title] = '';
+    out[title] += '\n' + indent(body);
+  };
 
-  if (command.commands) {
-    help += `  Commands:\n`;
+  if (description) fmt('DESCRIPTION', description);
 
-    for (const cmd of command.commands) {
-      help += `    ${cmd.name}`;
+  fmt(
+    'USAGE',
+    usage
+      ? `${usage}`
+      : `$ ${bin} ${commands ? '[command]' : ''} ${args ? '[args]' : ''} ${
+        flags ? '[flags]' : ''
+      }`,
+  );
 
-      if (cmd.description) {
-        help += `    ${cmd.description}`;
-      }
+  if (example) fmt('EXAMPLE', example);
 
-      help += '\n';
+  const maxLen = Math.max(
+    ...Object.entries(flags).map(([k, v]) => {
+      const { short, placeholder } = v;
+      return (short && placeholder)
+        ? `-${short}, --${k} [${placeholder}]`.length
+        : short
+        ? `-${short}, --${k}`.length
+        : `    --${k} [${placeholder}]`.length;
+    }),
+  ) + 4;
+
+  if (commands.length) {
+    for (const cmd of commands) {
+      const { name, aliases, description, title } = cmd;
+      let temp = name + (aliases?.length ? `, ${aliases.join(', ')}` : '');
+      temp += ' '.padEnd(maxLen - temp.length);
+      if (description) temp += description;
+      fmt(title!, temp);
     }
-
-    help += '\n';
   }
 
-  if (command.flags) {
-    help += `  Flags:\n`;
+  for (const flag in flags) {
+    const { description, defaultV, placeholder, short, title } = flags[flag];
+    let temp = (short ? `-${short},` : '   ') + ` --${flag}`;
+    if (placeholder) temp += ` [${placeholder}]`;
+    temp += ' '.padEnd(maxLen - temp.length);
+    if (description) temp += description;
+    if (defaultV) temp += ` [default: ${defaultV}]`;
+    fmt(title!, temp);
+  }
 
-    for (const flag in command.flags) {
-      const val = command.flags[flag];
-
-      help += '    ';
-
-      if (val.short) {
-        help += `-${val.short}, `;
-      }
-
-      help += `--${flag}`.padEnd(12);
-
-      if (val.description) {
-        help += `    ${val.description}`;
-      }
-
-      help += '\n';
+  if (Object.keys(args).length) {
+    for (const arg in args) {
+      const { description, nargs } = args[arg];
+      let temp = nargs === '?'
+        ? `[${arg}]`
+        : nargs === '*'
+        ? `[${arg}...]`
+        : nargs === '+'
+        ? `<${arg}...>`
+        : typeof nargs === 'number'
+        ? '<' + `${arg},`.repeat(nargs) + '>'
+        : arg;
+      temp += ' '.padEnd(maxLen - temp.length);
+      if (description) temp += description;
+      fmt('ARGS', temp);
     }
-
-    help += '\n';
   }
 
-  if (command.args) {
-    help += `  Args:\n`;
-
-    for (const arg in command.args) {
-      const val = command.args[arg];
-
-      help += `    ${arg}`;
-
-      if (val.description) {
-        help += `    ${val.description}`;
-      }
-
-      help += '\n';
-    }
-    help += '\n';
+  for (const key in out) {
+    console.log('\n  ', key, out[key]);
   }
-
-  console.log(help);
 }
 
 function resolveFlags(parent: Flags, child?: Flags): Flags {
@@ -255,9 +287,13 @@ type Command = {
    */
   args: Args;
   /**
-   * The function to run when this command is found in `Deno.args`.
+   * Function to run when this command is found in `Deno.args`.
    */
   run?: (args: Record<string, unknown>, flags: Record<string, unknown>) => void;
+  /**
+   * Group this command under this title name in help message.
+   */
+  title?: string;
 };
 
 type UserCommand = RequireOnly<Partial<Command>, 'name'>;
@@ -286,7 +322,7 @@ type Flag = {
    *
    * @default undefined
    */
-  default?: unknown;
+  defaultV?: unknown;
   /**
    * Whether this flag should be passed deeply to all sub-commands' flags.
    *
@@ -300,10 +336,14 @@ type Flag = {
    * @default <flag-name>
    */
   placeholder?: string;
+  /**
+   * Group this command under this title name in help message.
+   */
+  title?: string;
 };
 
 type Flags = {
-  [field: string]: Flag;
+  [long: string]: Flag;
 };
 
 type Arg = {
@@ -320,5 +360,5 @@ type Arg = {
 };
 
 type Args = {
-  [field: string]: Arg;
+  [long: string]: Arg;
 };
