@@ -1,10 +1,8 @@
 import { parse } from 'https://deno.land/std@0.120.0/flags/mod.ts';
 
-export function komando(opt: UserKomandoOptions, argv: string[] = Deno.args) {
-  const resolved = defineCommand(opt);
-  // even though `resolved` is Command type,
-  // it already has `version`, so pass with as KomandoOptions.
-  komandoImpl(resolved as KomandoOptions, argv);
+export function komando(rootCommand: UserCommand, argv: string[] = Deno.args) {
+  const resolved = defineCommand(rootCommand);
+  komandoImpl(resolved, argv);
 }
 
 export function defineCommand(command: UserCommand): Command {
@@ -28,14 +26,13 @@ export function defineCommand(command: UserCommand): Command {
   return resolved;
 }
 
-function komandoImpl(resolved: KomandoOptions, argv: string[]) {
-  const { name, version } = resolved;
+function komandoImpl(currentCommand: Command, argv: string[]) {
+  const { name, version } = currentCommand;
   if ((argv.includes('-V') || argv.includes('--version')) && version) {
     console.log(`${name}@${version}`);
     return;
   }
 
-  let currentCommand: Command = resolved;
   argv = [...argv]; // Deno.args is read only, copy it
 
   // filter out the matched commands
@@ -208,6 +205,10 @@ type Command = {
    */
   name: string;
   /**
+   * Version number of this CLI app
+   */
+  version?: string;
+  /**
    * Command usage.
    *
    * @default undefined
@@ -257,17 +258,6 @@ type Command = {
 };
 
 type UserCommand = RequireOnly<Partial<Command>, 'name'>;
-
-type UserKomandoOptions = Omit<UserCommand, 'aliases'> & {
-  /**
-   * Version number of this CLI app
-   */
-  version: string;
-};
-
-type KomandoOptions = Omit<Command, 'aliases'> & {
-  version: string;
-};
 
 type RequireOnly<T, Keys extends keyof T> =
   & Pick<T, Exclude<keyof T, Keys>>
