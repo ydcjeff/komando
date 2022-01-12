@@ -205,7 +205,7 @@ type Command = {
    */
   name: string;
   /**
-   * Version number of this CLI app
+   * Version number of this CLI app. This is not used in subcommands.
    */
   version?: string;
   /**
@@ -228,7 +228,8 @@ type Command = {
    */
   example?: string;
   /**
-   * Command aliases.
+   * Command aliases. This is only used in subcommands.
+   * Root command should not have defined `aliases`.
    *
    * @default undefined
    */
