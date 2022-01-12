@@ -35,8 +35,8 @@ test('root short flags', () => {
     name: NAME,
     version: VERSION,
     flags: {
-      flagA: { alias: 'A' },
-      flagB: { alias: 'B' },
+      flagA: { short: 'A' },
+      flagB: { short: 'B' },
     },
     run(_, flags) {
       assertEquals(flags.flagA, 'abc');
@@ -73,8 +73,8 @@ test('command short flags', () => {
       defineCommand({
         name: 'test',
         flags: {
-          flagA: { alias: 'A' },
-          flagB: { alias: 'B' },
+          flagA: { short: 'A' },
+          flagB: { short: 'B' },
         },
       }),
     ],
@@ -111,7 +111,7 @@ test('kebab case long flags', () => {
 test('kebab case short flags', () => {
   komando({
     name: import.meta.url,
-    flags: { camelCase: { alias: 'C' } },
+    flags: { camelCase: { short: 'C' } },
     run(_, flags) {
       assert(flags.camelCase);
     },

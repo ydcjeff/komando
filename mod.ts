@@ -64,7 +64,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
     alias: Object.fromEntries(
       Object.entries(flags).map((
         [k, v],
-      ) => [k, [toKebabCase(k), v.alias ?? '']]),
+      ) => [k, [toKebabCase(k), v.short ?? '']]),
     ),
     default: Object.fromEntries(
       Object.entries(flags).map(([k, v]) => [k, v.default ?? undefined]),
@@ -156,8 +156,8 @@ function showHelp(bin: string, command: Command) {
 
       help += '    ';
 
-      if (val.alias) {
-        help += `-${val.alias}, `;
+      if (val.short) {
+        help += `-${val.short}, `;
       }
 
       help += `--${flag}`.padEnd(12);
@@ -276,11 +276,11 @@ type Flag = {
    */
   description?: string;
   /**
-   * Flag alias. Unlike command aliases, flag alias has to be a single string.
+   * Short flag. Unlike command aliases, short flag has to be a single string.
    *
    * @default undefined
    */
-  alias?: string;
+  short?: string;
   /**
    * Default value of this flag.
    *
