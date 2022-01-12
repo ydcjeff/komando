@@ -218,7 +218,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
     }
   } while (hasSubCommands);
 
-  if (argv.includes('-h') || argv.includes('--help')) {
+  if (argv.includes('-h') || argv.includes('--help') || !currentCommand.run) {
     showHelp(name, currentCommand, version);
     return;
   }
