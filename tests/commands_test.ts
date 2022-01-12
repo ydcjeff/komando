@@ -1,4 +1,4 @@
-import { assert } from 'https://deno.land/std@0.120.0/testing/asserts.ts';
+import { assert } from '../deps.ts';
 import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;

@@ -1,4 +1,4 @@
-import { parse } from 'https://deno.land/std@0.120.0/flags/mod.ts';
+import { parse } from './deps.ts';
 
 export function komando(rootCommand: UserCommand, argv: string[] = Deno.args) {
   const resolved = defineCommand(rootCommand);
