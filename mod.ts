@@ -8,7 +8,9 @@ type Command = {
    */
   name: string;
   /**
-   * Version number of this CLI app. This is not used in subcommands.
+   * Version number of this CLI app.
+   *
+   * _**NOTE: This is not required in subcommands.**_
    *
    * @default undefined
    * @example 'v1.0.0'
@@ -36,8 +38,10 @@ type Command = {
    */
   example?: string;
   /**
-   * Command aliases. This is only used in subcommands.
-   * Root command should not have defined `aliases`.
+   * Command aliases.
+   *
+   * _**NOTE: This is only used in subcommands.
+   * Root command should not have defined `aliases`.**_
    *
    * @default undefined
    * @example ['i', 'isntall']
@@ -85,7 +89,7 @@ type Command = {
    * Function for showing version info. This function can be used to show
    * other related version info.
    *
-   * _NOTE: This function is not called in sub-commands._
+   * _**NOTE: This function is not called in sub-commands.**_
    *
    * @default console.log(`${name}@${version}`)
    */
@@ -108,7 +112,9 @@ type Flag = {
    */
   description?: string;
   /**
-   * Short flag. Unlike command aliases, short flag has to be a single string.
+   * Short flag.
+   *
+   * _**NOTE: Unlike command aliases, short flag has to be a single character.**_
    *
    * @default undefined
    * @example '-c'
@@ -129,14 +135,16 @@ type Flag = {
   deepPass?: boolean;
   /**
    * The placeholder to appear in the help message.
-   * It defaults to the flag name.
+   * It defaults to the long flag name.
    *
-   * @default <flag-name>
+   * @default <long-flag-name>
    * @example 'config-file'
    */
   placeholder?: string;
   /**
-   * Put this flag under this group name in the help message.
+   * Put this flag under this group name in the help message. If `deepPass` is
+   * true, this flag will be shown under `Inherited Flags` in sub-commands' help
+   * and it cannot be changed.
    *
    * @default 'Flags'
    * @example 'Runtime Flags'
@@ -151,6 +159,16 @@ type Flags = {
 type Arg = {
   /**
    * Number of values this argument requires.
+   *
+   * `?`, `*`, `+` works same as in JavaScript Regex meaning.
+   *
+   * - `?` requires zero or one value, output will be undefined or a single value.
+   * - `*` requires zero or more values, output will be an empty array or an
+   * array with many values.
+   * - `+` requires one or more values, output will be an array with a single
+   * value or an array with many values.
+   * - If given specific number, output will be an array with that number of
+   * values.
    *
    * @default 1
    */
@@ -167,6 +185,12 @@ type Args = {
   [long: string]: Arg;
 };
 
+/**
+ * Komando main function to define a CLI app.
+ *
+ * @param rootCommand Root command to define
+ * @param argv Argument values from Deno (Deno.args)
+ */
 export function komando(rootCommand: UserCommand, argv: string[] = Deno.args) {
   if (rootCommand.aliases) {
     throw new Error('root command should not have aliases.');
@@ -175,6 +199,14 @@ export function komando(rootCommand: UserCommand, argv: string[] = Deno.args) {
   komandoImpl(resolved, argv);
 }
 
+/**
+ * Helper function to set default values to the sub-command. So, users do not
+ * need to define the required values in {@link komando} main function.
+ * This also provide type helper with completions.
+ *
+ * @param command Sub-command to define
+ * @returns The sub-command with required properties defined
+ */
 export function defineCommand(command: UserCommand): Command {
   const resolved: Command = {
     commands: [],
@@ -189,7 +221,7 @@ export function defineCommand(command: UserCommand): Command {
   groupBy('Commands', resolved.commands);
   groupBy('Flags', resolved.flags);
 
-  // TODO remove?
+  // we require long flag name, so loop again
   for (const key in resolved.flags) {
     const val = resolved.flags[key];
     if (!val.placeholder) val.placeholder = key;
@@ -203,7 +235,18 @@ export function defineCommand(command: UserCommand): Command {
   return resolved;
 }
 
-export function groupBy(name: string, toGroup: Command[] | Flags) {
+/**
+ * Helper function that set `groupName` property of Array of `Command` or `Flags`
+ * This function is used to group many commands or flags.
+ *
+ * @param name Group name
+ * @param toGroup Array of `Command` or `Flags` to group
+ * @returns Array of Commands or Flags with `groupName` defined
+ */
+export function groupBy(
+  name: string,
+  toGroup: Command[] | Flags,
+): Command[] | Flags {
   for (const val of Object.values(toGroup) as Command[] | Flag[]) {
     if (!val.groupName) val.groupName = name;
   }
@@ -359,10 +402,10 @@ function showHelp(bin: string, command: Command, version?: string) {
     ...Object.entries(flags).map(([k, v]) => {
       const { short, placeholder } = v;
       return (short && placeholder)
-        ? `-${short}, --${k} [${placeholder}]`.length
+        ? `-${short}, --${k} <${placeholder}>`.length
         : short
         ? `-${short}, --${k}`.length
-        : `    --${k} [${placeholder}]`.length;
+        : `    --${k} <${placeholder}>`.length;
     }),
   ) + 4; // 4 here is gap between commands/flags/args and desc;
 
