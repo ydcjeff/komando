@@ -300,13 +300,14 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
   if (run) run(rArgs, flags);
 }
 
-const camelCasePattern = /\B([A-Z])/g;
+const camelCaseRE = /\B([A-Z])/g;
 function toKebabCase(str: string) {
-  return str.replace(camelCasePattern, '-$1').toLowerCase();
+  return str.replace(camelCaseRE, '-$1').toLowerCase();
 }
 
 function showHelp(bin: string, command: Command, version?: string) {
   const out: Record<string, string | string[]> = {};
+  const { columns } = Deno.consoleSize(Deno.stdout.rid);
   const {
     description,
     example,
@@ -363,13 +364,26 @@ function showHelp(bin: string, command: Command, version?: string) {
         ? `-${short}, --${k}`.length
         : `    --${k} [${placeholder}]`.length;
     }),
-  ) + 4;
+  ) + 4; // 4 here is gap between commands/flags/args and desc;
+
+  // 4 here is commands/flags/args indentation
+  const descIndent = maxLen + 4;
+  const descWidth = columns - descIndent;
+  // https://stackoverflow.com/a/51506718
+  const wrapRE = new RegExp(
+    `(?![^\\n]{1,${descWidth}}$)([^\\n]{1,${descWidth}})\\s`,
+    'g',
+  );
+  const wrapAndIndent = (str: string) =>
+    str.replace(wrapRE, `$1\n${' '.repeat(descIndent)}`);
 
   if (commands.length) {
     for (const cmd of commands) {
       const { name, aliases, description, groupName } = cmd;
       let temp = name + (aliases?.length ? `, ${aliases.join(', ')}` : '');
-      if (description) temp += ' '.padEnd(maxLen - temp.length) + description;
+      if (description) {
+        temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);
+      }
       fmt(groupName!, temp);
     }
   }
@@ -379,7 +393,9 @@ function showHelp(bin: string, command: Command, version?: string) {
       flags[flag];
     let temp = (short ? `-${short},` : '   ') + ` --${flag}`;
     if (placeholder) temp += ` [${placeholder}]`;
-    if (description) temp += ' '.padEnd(maxLen - temp.length) + description;
+    if (description) {
+      temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);
+    }
     if (defaultV) temp += ` [default: ${defaultV}]`;
     fmt(groupName!, temp);
   }
@@ -396,7 +412,9 @@ function showHelp(bin: string, command: Command, version?: string) {
         : typeof nargs === 'number'
         ? '<' + `${arg},`.repeat(nargs) + '>'
         : arg;
-      if (description) temp += ' '.padEnd(maxLen - temp.length) + description;
+      if (description) {
+        temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);
+      }
       fmt('Args', temp);
     }
   }
