@@ -177,6 +177,7 @@ export function defineCommand(command: UserCommand): Command {
   groupBy('Commands', resolved.commands);
   groupBy('Flags', resolved.flags);
 
+  // TODO remove?
   for (const key in resolved.flags) {
     const val = resolved.flags[key];
     if (!val.placeholder) val.placeholder = key;
@@ -356,8 +357,7 @@ function showHelp(bin: string, command: Command, version?: string) {
     for (const cmd of commands) {
       const { name, aliases, description, groupName } = cmd;
       let temp = name + (aliases?.length ? `, ${aliases.join(', ')}` : '');
-      temp += ' '.padEnd(maxLen - temp.length);
-      if (description) temp += description;
+      if (description) temp += ' '.padEnd(maxLen - temp.length) + description;
       fmt(groupName!, temp);
     }
   }
@@ -367,8 +367,7 @@ function showHelp(bin: string, command: Command, version?: string) {
       flags[flag];
     let temp = (short ? `-${short},` : '   ') + ` --${flag}`;
     if (placeholder) temp += ` [${placeholder}]`;
-    temp += ' '.padEnd(maxLen - temp.length);
-    if (description) temp += description;
+    if (description) temp += ' '.padEnd(maxLen - temp.length) + description;
     if (defaultV) temp += ` [default: ${defaultV}]`;
     fmt(groupName!, temp);
   }
@@ -385,8 +384,7 @@ function showHelp(bin: string, command: Command, version?: string) {
         : typeof nargs === 'number'
         ? '<' + `${arg},`.repeat(nargs) + '>'
         : arg;
-      temp += ' '.padEnd(maxLen - temp.length);
-      if (description) temp += description;
+      if (description) temp += ' '.padEnd(maxLen - temp.length) + description;
       fmt('Args', temp);
     }
   }
@@ -408,8 +406,10 @@ function resolveFlags(parent: Flags, child: Flags): Flags {
     }
     out[cFlag] = child[cFlag];
   }
+  const temp = Object.entries(parent).filter(([_, v]) => v.deepPass);
+  temp.forEach(([_, v]) => v.groupName = 'Inherited Flags');
   return Object.assign(
     out,
-    Object.fromEntries(Object.entries(parent).filter(([_, v]) => v.deepPass)),
+    Object.fromEntries(temp),
   );
 }

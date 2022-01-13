@@ -1,5 +1,5 @@
 import { assert, assertEquals, restoreAll, spyOn } from '../deps.ts';
-import { komando } from '../mod.ts';
+import { defineCommand, komando } from '../mod.ts';
 const { test } = Deno;
 
 test('show default help', () => {
@@ -68,6 +68,36 @@ test('show help + epilog', () => {
 
   Env Variables
     CI: true`,
+  );
+  restoreAll();
+});
+
+test('show help + inherited', () => {
+  const spy = spyOn(console, 'log');
+  komando({
+    name: 'help_test',
+    flags: { parent: { deepPass: true } },
+    commands: [
+      defineCommand({
+        name: 'child',
+        flags: { child: {} },
+      }),
+    ],
+  }, ['child', '-h']);
+  assert(spy.called);
+  assertEquals(spy.callCount, 3);
+  assertEquals(
+    spy.calls.flat().join('\n'),
+    `
+  Usage
+    $ help_test [flags]
+
+  Flags
+        --child [child]
+    -h, --help               Show this message
+
+  Inherited Flags
+        --parent [parent]`,
   );
   restoreAll();
 });
