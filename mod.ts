@@ -75,6 +75,12 @@ type Command = {
    * @example 'Core Commands'
    */
   groupName?: string;
+  /**
+   * Extra message to print at the end of the help message.
+   *
+   * @default undefined
+   */
+  epilog?: string;
 };
 
 type UserCommand = RequireOnly<Partial<Command>, 'name'>;
@@ -288,8 +294,16 @@ function toKebabCase(str: string) {
 
 function showHelp(bin: string, command: Command, version?: string) {
   const out: Record<string, string | string[]> = {};
-  const { description, example, commands, flags, args, usage, aliases } =
-    command;
+  const {
+    description,
+    example,
+    commands,
+    flags,
+    args,
+    usage,
+    aliases,
+    epilog,
+  } = command;
   flags.help = {
     short: 'h',
     description: 'Show this message',
@@ -380,6 +394,7 @@ function showHelp(bin: string, command: Command, version?: string) {
   for (const key in out) {
     console.log('\n  ' + key + out[key]);
   }
+  if (epilog) console.log(epilog);
 }
 
 function resolveFlags(parent: Flags, child?: Flags): Flags {

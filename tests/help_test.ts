@@ -48,3 +48,26 @@ test('show command help', () => {
   );
   restoreAll();
 });
+
+test('show help + epilog', () => {
+  const spy = spyOn(console, 'log');
+  komando({
+    name: 'help_test',
+    epilog: '\n  Env Variables\n    CI: true',
+  }, ['-h']);
+  assert(spy.called);
+  assertEquals(spy.callCount, 3);
+  assertEquals(
+    spy.calls.flat().join('\n'),
+    `
+  Usage
+    $ help_test [flags]
+
+  Flags
+    -h, --help    Show this message
+
+  Env Variables
+    CI: true`,
+  );
+  restoreAll();
+});
