@@ -31,9 +31,9 @@ test('show command help', () => {
         usage: '$ help_test cmd [flags]',
         commands: [],
         flags: {},
-        args: {}
-      }
-    ]
+        args: {},
+      },
+    ],
   }, ['cmd', '--help']);
   assert(spy.called);
   assertEquals(spy.callCount, 2);

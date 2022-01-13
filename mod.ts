@@ -69,12 +69,12 @@ type Command = {
    */
   run?: (args: Record<string, unknown>, flags: Record<string, unknown>) => void;
   /**
-   * Group this command under this title name in help message.
+   * Put this command under this group name in the help message.
    *
-   * @default 'COMMANDS'
-   * @example 'CORE COMMANDS'
+   * @default 'Commands'
+   * @example 'Core Commands'
    */
-  title?: string;
+  groupName?: string;
 };
 
 type UserCommand = RequireOnly<Partial<Command>, 'name'>;
@@ -121,12 +121,12 @@ type Flag = {
    */
   placeholder?: string;
   /**
-   * Group this command under this title name in help message.
+   * Put this flag under this group name in the help message.
    *
-   * @default 'FLAGS'
-   * @example 'RUNTIME FLAGS'
+   * @default 'Flags'
+   * @example 'Runtime Flags'
    */
-  title?: string;
+  groupName?: string;
 };
 
 type Flags = {
@@ -184,9 +184,9 @@ export function defineCommand(command: UserCommand): Command {
   return resolved;
 }
 
-export function groupBy(title: string, toGroup: Command[] | Flags) {
+export function groupBy(name: string, toGroup: Command[] | Flags) {
   for (const val of Object.values(toGroup) as Command[] | Flag[]) {
-    if (!val.title) val.title = title;
+    if (!val.groupName) val.groupName = name;
   }
   return toGroup;
 }
@@ -295,7 +295,7 @@ function showHelp(bin: string, command: Command, version?: string) {
     description: 'Show this message',
     deepPass: true,
     defaultV: false,
-    title: 'Flags',
+    groupName: 'Flags',
   };
   if (version) {
     flags.version = {
@@ -303,7 +303,7 @@ function showHelp(bin: string, command: Command, version?: string) {
       defaultV: false,
       deepPass: true,
       description: 'Show version info',
-      title: 'Flags',
+      groupName: 'Flags',
     };
   }
 
@@ -340,22 +340,23 @@ function showHelp(bin: string, command: Command, version?: string) {
 
   if (commands.length) {
     for (const cmd of commands) {
-      const { name, aliases, description, title } = cmd;
+      const { name, aliases, description, groupName } = cmd;
       let temp = name + (aliases?.length ? `, ${aliases.join(', ')}` : '');
       temp += ' '.padEnd(maxLen - temp.length);
       if (description) temp += description;
-      fmt(title!, temp);
+      fmt(groupName!, temp);
     }
   }
 
   for (const flag in flags) {
-    const { description, defaultV, placeholder, short, title } = flags[flag];
+    const { description, defaultV, placeholder, short, groupName } =
+      flags[flag];
     let temp = (short ? `-${short},` : '   ') + ` --${flag}`;
     if (placeholder) temp += ` [${placeholder}]`;
     temp += ' '.padEnd(maxLen - temp.length);
     if (description) temp += description;
     if (defaultV) temp += ` [default: ${defaultV}]`;
-    fmt(title!, temp);
+    fmt(groupName!, temp);
   }
 
   if (Object.keys(args).length) {
