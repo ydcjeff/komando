@@ -35,6 +35,21 @@ test('version --version flag', () => {
   restoreAll();
 });
 
+test('version custom', () => {
+  const spy = spyOn(console, 'log');
+  komando({
+    name: 'flags_test',
+    version: 'v1.0.0',
+    showVersion(name, version) {
+      console.log(`${name} ${version} Deno`);
+    },
+  }, ['--version']);
+  assert(spy.called);
+  assertEquals(spy.callCount, 1);
+  assertEquals(spy.calls[0][0], 'flags_test v1.0.0 Deno');
+  restoreAll();
+});
+
 test('no help in flags', () => {
   komando({
     name: NAME,
@@ -156,12 +171,12 @@ test('duplicate flags', () => {
         name: import.meta.url,
         flags: { flagA: { deepPass: true } },
         commands: [
-          {
+          defineCommand({
             name: 'duplicate',
             commands: [],
             flags: { flagA: {} },
             args: {},
-          },
+          }),
         ],
       }, ['duplicate']);
     },

@@ -26,13 +26,10 @@ test('show command help', () => {
   komando({
     name: 'help_test',
     commands: [
-      {
+      defineCommand({
         name: 'cmd',
         usage: '$ help_test cmd [flags]',
-        commands: [],
-        flags: {},
-        args: {},
-      },
+      }),
     ],
   }, ['cmd', '--help']);
   assert(spy.called);

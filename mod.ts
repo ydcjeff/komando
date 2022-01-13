@@ -81,6 +81,15 @@ type Command = {
    * @default undefined
    */
   epilog?: string;
+  /**
+   * Function for showing version info. This function can be used to show
+   * other related version info.
+   *
+   * _NOTE: This function is not called in sub-commands._
+   *
+   * @default console.log(`${name}@${version}`)
+   */
+  showVersion: (name: string, version: string) => void;
 };
 
 type UserCommand = RequireOnly<Partial<Command>, 'name'>;
@@ -171,6 +180,9 @@ export function defineCommand(command: UserCommand): Command {
     commands: [],
     flags: {},
     args: {},
+    showVersion(name, version) {
+      console.log(`${name}@${version}`);
+    },
     ...command,
   };
 
@@ -199,9 +211,9 @@ export function groupBy(name: string, toGroup: Command[] | Flags) {
 }
 
 function komandoImpl(currentCommand: Command, argv: string[]) {
-  const { name, version } = currentCommand;
+  const { name, version, showVersion } = currentCommand;
   if ((argv.includes('-V') || argv.includes('--version')) && version) {
-    console.log(`${name}@${version}`);
+    showVersion(name, version);
     return;
   }
 
