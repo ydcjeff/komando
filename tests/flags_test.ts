@@ -148,3 +148,24 @@ test('kebab case short flags', () => {
     },
   }, ['-C']);
 });
+
+test('duplicate flags', () => {
+  assertThrows(
+    () => {
+      komando({
+        name: import.meta.url,
+        flags: { flagA: { deepPass: true } },
+        commands: [
+          {
+            name: 'duplicate',
+            commands: [],
+            flags: { flagA: {} },
+            args: {},
+          },
+        ],
+      }, ['duplicate']);
+    },
+    Error,
+    'Found duplicate flags when merging inherited and child flags:',
+  );
+});

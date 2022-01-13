@@ -397,11 +397,19 @@ function showHelp(bin: string, command: Command, version?: string) {
   if (epilog) console.log(epilog);
 }
 
-function resolveFlags(parent: Flags, child?: Flags): Flags {
-  return {
-    ...child,
-    ...Object.fromEntries(
-      Object.entries(parent).filter(([_, v]) => v.deepPass),
-    ),
-  };
+function resolveFlags(parent: Flags, child: Flags): Flags {
+  const out: Flags = {};
+  for (const cFlag in child) {
+    if (cFlag in parent && parent[cFlag].deepPass) {
+      throw new Error(
+        `Found duplicate flags when merging inherited and child flags: ` +
+          `"${cFlag}"`,
+      );
+    }
+    out[cFlag] = child[cFlag];
+  }
+  return Object.assign(
+    out,
+    Object.fromEntries(Object.entries(parent).filter(([_, v]) => v.deepPass)),
+  );
 }
