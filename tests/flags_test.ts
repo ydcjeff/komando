@@ -8,8 +8,7 @@ import {
 import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;
-const NAME = 'test';
-const VERSION = 'v0.0.0';
+const name = import.meta.url;
 
 test('version -V flag', () => {
   const spy = spyOn(console, 'log');
@@ -35,7 +34,7 @@ test('version --version flag', () => {
   restoreAll();
 });
 
-test('version custom', () => {
+test('version custom log', () => {
   const spy = spyOn(console, 'log');
   komando({
     name: 'flags_test',
@@ -50,10 +49,22 @@ test('version custom', () => {
   restoreAll();
 });
 
+test('version unknow flag', () => {
+  assertThrows(
+    () => {
+      komando({
+        name,
+        run() {},
+      }, ['-V']);
+    },
+    Error,
+    'Unknown flags found. See the above table.',
+  );
+});
+
 test('no help in flags', () => {
   komando({
-    name: NAME,
-    version: VERSION,
+    name,
     run(_, flags) {
       assertEquals(flags, {});
     },
@@ -62,8 +73,7 @@ test('no help in flags', () => {
 
 test('root long flags', () => {
   komando({
-    name: NAME,
-    version: VERSION,
+    name,
     flags: {
       flagA: {},
       flagB: {},
@@ -77,8 +87,7 @@ test('root long flags', () => {
 
 test('root short flags', () => {
   komando({
-    name: NAME,
-    version: VERSION,
+    name,
     flags: {
       flagA: { short: 'A' },
       flagB: { short: 'B' },
@@ -90,10 +99,9 @@ test('root short flags', () => {
   }, ['-A', 'abc', '-B', '123']);
 });
 
-test('command long flags', () => {
+test('sub command long flags', () => {
   komando({
-    name: NAME,
-    version: VERSION,
+    name,
     commands: [
       defineCommand({
         name: 'test',
@@ -101,19 +109,21 @@ test('command long flags', () => {
           flagA: {},
           flagB: {},
         },
+        run(_, flags) {
+          assertEquals(flags.flagA, 'abc');
+          assertEquals(flags.flagB, 123);
+        },
       }),
     ],
-    run(_, flags) {
-      assertEquals(flags.flagA, 'abc');
-      assertEquals(flags.flagB, 123);
+    run() {
+      assert(false, 'sub command run should be called, not this run');
     },
   }, ['test', '--flagA', 'abc', '--flagB', '123']);
 });
 
-test('command short flags', () => {
+test('sub command short flags', () => {
   komando({
-    name: NAME,
-    version: VERSION,
+    name,
     commands: [
       defineCommand({
         name: 'test',
@@ -121,20 +131,54 @@ test('command short flags', () => {
           flagA: { short: 'A' },
           flagB: { short: 'B' },
         },
+        run(_, flags) {
+          assertEquals(flags.flagA, 'abc');
+          assertEquals(flags.flagB, 123);
+        },
       }),
     ],
-    run(_, flags) {
-      assertEquals(flags.flagA, 'abc');
-      assertEquals(flags.flagB, 124);
+    run() {
+      assert(false, 'sub command run should be called, not this run');
     },
   }, ['test', '-A', 'abc', '-B', '123']);
+});
+
+test('sub sub command after flags', () => {
+  komando({
+    name,
+    commands: [
+      defineCommand({
+        name: 'sub1',
+        flags: {
+          flagA: {},
+        },
+        commands: [
+          defineCommand({
+            name: 'sub2',
+            run() {
+              assert(
+                false,
+                'parent command run should be called, not this run',
+              );
+            },
+          }),
+        ],
+        run(_, flags) {
+          assertEquals(flags.flagA, 'sub2');
+        },
+      }),
+    ],
+    run() {
+      assert(false, 'sub command run should be called, not this run');
+    },
+  }, ['sub1', '--flagA', 'sub2']);
 });
 
 test('unknown flags found', () => {
   assertThrows(
     () => {
       komando({
-        name: 'unknown',
+        name,
         flags: { known: {} },
         run() {},
       }, ['--unknown']);
@@ -146,7 +190,7 @@ test('unknown flags found', () => {
 
 test('kebab case long flags', () => {
   komando({
-    name: import.meta.url,
+    name,
     flags: { camelCase: {} },
     run(_, flags) {
       assert(flags.camelCase);
@@ -156,7 +200,7 @@ test('kebab case long flags', () => {
 
 test('kebab case short flags', () => {
   komando({
-    name: import.meta.url,
+    name,
     flags: { camelCase: { short: 'C' } },
     run(_, flags) {
       assert(flags.camelCase);
@@ -168,14 +212,12 @@ test('duplicate flags', () => {
   assertThrows(
     () => {
       komando({
-        name: import.meta.url,
+        name,
         flags: { flagA: { deepPass: true } },
         commands: [
           defineCommand({
             name: 'duplicate',
-            commands: [],
             flags: { flagA: {} },
-            args: {},
           }),
         ],
       }, ['duplicate']);
@@ -183,4 +225,23 @@ test('duplicate flags', () => {
     Error,
     'Found duplicate flags when merging inherited and child flags:',
   );
+});
+
+test('inherited flags', () => {
+  komando({
+    name,
+    flags: { parent: { deepPass: true } },
+    commands: [
+      defineCommand({
+        name: 'child',
+        flags: { child: {} },
+        run(_, flags) {
+          assertEquals(flags.parent, true);
+        },
+      }),
+    ],
+    run() {
+      assert(false, 'sub command run should be called, not this run');
+    },
+  }, ['child', '--parent']);
 });

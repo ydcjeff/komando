@@ -1,6 +1,6 @@
 import { parse } from './deps.ts';
 
-type Command = {
+export type Command = {
   /**
    * The name of the command.
    *
@@ -96,7 +96,7 @@ type Command = {
   showVersion: (name: string, version: string) => void;
 };
 
-type UserCommand = RequireOnly<Partial<Command>, 'name'>;
+export type UserCommand = RequireOnly<Partial<Command>, 'name'>;
 
 type RequireOnly<T, Keys extends keyof T> =
   & Pick<T, Exclude<keyof T, Keys>>
@@ -152,7 +152,7 @@ type Flag = {
   groupName?: string;
 };
 
-type Flags = {
+export type Flags = {
   [long: string]: Flag;
 };
 
@@ -167,7 +167,8 @@ type Arg = {
    * array with many values.
    * - `+` requires one or more values, output will be an array with a single
    * value or an array with many values.
-   * - If given specific number, output will be an array with that number of
+   * - If `1`, output will be a single value.
+   * - If other specific number, output will be an array with that number of
    * values.
    *
    * @default 1
@@ -393,7 +394,7 @@ function showHelp(bin: string, command: Command, version?: string) {
       ? `${usage}`
       : `$ ${bin}${commands.length ? ' [command]' : ''}${
         Object.keys(args).length ? ' [args]' : ''
-      }${Object.keys(flags).length ? ' [flags]' : ''}`,
+      } [flags]`,
   );
 
   if (example) fmt('Example', example);
@@ -453,7 +454,7 @@ function showHelp(bin: string, command: Command, version?: string) {
         : nargs === '+'
         ? `<${arg}...>`
         : typeof nargs === 'number'
-        ? '<' + `${arg},`.repeat(nargs) + '>'
+        ? '<' + `${arg}` + `,${arg}`.repeat(nargs - 1) + '>'
         : arg;
       if (description) {
         temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);

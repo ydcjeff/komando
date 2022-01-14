@@ -1,0 +1,67 @@
+export const root_cmd_help = `
+  Description
+    Root command desc
+
+  Usage
+    Root command usage
+
+  Commands
+    sub1, s1               sub1 cmd desc
+
+  Flags
+    -p, --parent [dir]
+        --flagA [flagA]
+    -h, --help             Show this message
+    -V, --version          Show version info
+
+  Args
+    [argA]                 argA desc
+    [argB...]              argB desc
+    <argC...>              argC desc
+    <argD>                 argD desc
+    <argE,argE>            argE desc`;
+
+export const sub_one_cmd_help = `
+  Description
+    sub1 cmd desc
+
+  Aliases
+    s1
+
+  Usage
+    $ root [command] [flags]
+
+  SUBCOMMANDS
+    subsub1
+    subsub2
+    subsub3
+
+  SUBFLAGS
+        --subFlagA [subFlagA]
+        --subFlagB [subFlagB]
+        --subFlagc [subFlagc]
+
+  Inherited Flags
+    -p, --parent [dir]
+
+  Flags
+    -h, --help                   Show this message
+    -V, --version                Show version info`;
+
+export const minimal_cmd_help_only_flags = `
+  Usage
+    $ mini [flags]
+
+  Flags
+    -h, --help    Show this message`;
+
+export const minimal_cmd_help_flags___args = `
+  Usage
+    $ mini [args] [flags]
+
+  Flags
+    -h, --help    Show this message
+
+  Args
+    <argA>`;
+

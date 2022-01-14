@@ -1,100 +1,99 @@
-import { assert, assertEquals, restoreAll, spyOn } from '../deps.ts';
-import { defineCommand, komando } from '../mod.ts';
+import { assert, restoreAll, setupSnapshot, spyOn } from '../deps.ts';
+import {
+  Command,
+  defineCommand,
+  Flags,
+  groupBy,
+  komando,
+  UserCommand,
+} from '../mod.ts';
+
 const { test } = Deno;
+const assertSnapshot = await setupSnapshot(import.meta.url);
 
-test('show default help', () => {
-  const spy = spyOn(console, 'log');
-  komando({
-    name: 'help_test',
-  }, ['-h']);
-  assert(spy.called);
-  assertEquals(spy.callCount, 2);
-  assertEquals(
-    spy.calls.flat().join('\n'),
-    `
-  Usage
-    $ help_test [flags]
+const komandoOptions: UserCommand = {
+  name: 'root',
+  version: 'v1.0.0',
+  usage: 'Root command usage',
+  description: 'Root command desc',
+  commands: [
+    defineCommand({
+      name: 'sub1',
+      description: 'sub1 cmd desc',
+      aliases: ['s1'],
+      commands: groupBy('SUBCOMMANDS', [
+        defineCommand({ name: 'subsub1' }),
+        defineCommand({ name: 'subsub2' }),
+        defineCommand({ name: 'subsub3' }),
+      ]) as Command[],
+      flags: groupBy('SUBFLAGS', {
+        subFlagA: {},
+        subFlagB: {},
+        subFlagc: {},
+      }) as Flags,
+    }),
+  ],
+  flags: {
+    parent: {
+      short: 'p',
+      deepPass: true,
+      placeholder: 'dir',
+    },
+    flagA: {},
+  },
+  args: {
+    argA: {
+      nargs: '?',
+      description: 'argA desc',
+    },
+    argB: {
+      nargs: '*',
+      description: 'argB desc',
+    },
+    argC: {
+      nargs: '+',
+      description: 'argC desc',
+    },
+    argD: {
+      nargs: 1,
+      description: 'argD desc',
+    },
+    argE: {
+      nargs: 2,
+      description: 'argE desc',
+    },
+  },
+};
 
-  Flags
-    -h, --help    Show this message`,
-  );
-  restoreAll();
-});
+const testdata = [
+  {
+    name: 'root cmd help',
+    komandoOptions,
+    argv: ['-h'],
+  },
+  {
+    name: 'sub one cmd help',
+    komandoOptions,
+    argv: ['sub1', '-h'],
+  },
+  {
+    name: 'minimal cmd help only flags',
+    komandoOptions: { name: 'mini' },
+    argv: ['mini', '-h'],
+  },
+  {
+    name: 'minimal cmd help flags + args',
+    komandoOptions: { name: 'mini', args: { argA: {} } },
+    argv: ['mini', '-h'],
+  },
+];
 
-test('show command help', () => {
-  const spy = spyOn(console, 'log');
-  komando({
-    name: 'help_test',
-    commands: [
-      defineCommand({
-        name: 'cmd',
-        usage: '$ help_test cmd [flags]',
-      }),
-    ],
-  }, ['cmd', '--help']);
-  assert(spy.called);
-  assertEquals(spy.callCount, 2);
-  assertEquals(
-    spy.calls.flat().join('\n'),
-    `
-  Usage
-    $ help_test cmd [flags]
-
-  Flags
-    -h, --help    Show this message`,
-  );
-  restoreAll();
-});
-
-test('show help + epilog', () => {
-  const spy = spyOn(console, 'log');
-  komando({
-    name: 'help_test',
-    epilog: '\n  Env Variables\n    CI: true',
-  }, ['-h']);
-  assert(spy.called);
-  assertEquals(spy.callCount, 3);
-  assertEquals(
-    spy.calls.flat().join('\n'),
-    `
-  Usage
-    $ help_test [flags]
-
-  Flags
-    -h, --help    Show this message
-
-  Env Variables
-    CI: true`,
-  );
-  restoreAll();
-});
-
-test('show help + inherited', () => {
-  const spy = spyOn(console, 'log');
-  komando({
-    name: 'help_test',
-    flags: { parent: { deepPass: true } },
-    commands: [
-      defineCommand({
-        name: 'child',
-        flags: { child: {} },
-      }),
-    ],
-  }, ['child', '-h']);
-  assert(spy.called);
-  assertEquals(spy.callCount, 3);
-  assertEquals(
-    spy.calls.flat().join('\n'),
-    `
-  Usage
-    $ help_test [flags]
-
-  Flags
-        --child [child]
-    -h, --help               Show this message
-
-  Inherited Flags
-        --parent [parent]`,
-  );
-  restoreAll();
-});
+for (const td of testdata) {
+  test(td.name, () => {
+    const spy = spyOn(console, 'log');
+    komando(td.komandoOptions, td.argv);
+    assert(spy.called);
+    assertSnapshot(spy.calls.flat().join('\n'), td.name);
+    restoreAll();
+  });
+}

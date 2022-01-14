@@ -2,110 +2,142 @@ import { assertEquals, assertThrows } from '../deps.ts';
 import { komando } from '../mod.ts';
 
 const { test } = Deno;
-const NAME = 'test';
-const VERSION = 'v0.0.0';
+const name = import.meta.url;
 
-test('? nargs', () => {
-  komando({
-    name: NAME,
-    version: VERSION,
-    args: {
-      argA: {
-        nargs: '?',
+test('? nargs with', async (tc) => {
+  await tc.step('0 argv', () => {
+    komando({
+      name,
+      args: {
+        argA: {
+          nargs: '?',
+        },
+        argB: {
+          nargs: '?',
+        },
       },
-      argB: {
-        nargs: '?',
+      run(args) {
+        assertEquals(args.argA, undefined);
+        assertEquals(args.argB, undefined);
       },
-    },
-    run(args) {
-      assertEquals(args.argA, 'abc');
-      assertEquals(args.argB, 'def');
-    },
-  }, ['abc', 'def', 'ghi']);
-});
-
-test('? nargs - empty argv', () => {
-  komando({
-    name: NAME,
-    version: VERSION,
-    args: {
-      argA: {
-        nargs: '?',
-      },
-      argB: {
-        nargs: '?',
-      },
-    },
-    run(args) {
-      assertEquals(args.argA, undefined);
-      assertEquals(args.argB, undefined);
-    },
-  }, []);
-});
-
-test('* nargs', () => {
-  komando({
-    name: NAME,
-    version: VERSION,
-    args: {
-      argA: {
-        nargs: '*',
-      },
-      argB: {
-        nargs: '*',
-      },
-    },
-    run(args) {
-      assertEquals(args.argA, ['abc', 'def']);
-      assertEquals(args.argB, undefined);
-    },
-  }, ['abc', 'def']);
-});
-
-test('* nargs - empty argv', () => {
-  komando({
-    name: NAME,
-    version: VERSION,
-    args: {
-      argA: {
-        nargs: '*',
-      },
-      argB: {
-        nargs: '*',
-      },
-    },
-    run(args) {
-      assertEquals(args.argA, []);
-      assertEquals(args.argB, undefined);
-    },
-  }, []);
-});
-
-test('+ nargs', () => {
-  komando({
-    name: NAME,
-    version: VERSION,
-    args: {
-      argA: {
-        nargs: '+',
-      },
-      argB: {
-        nargs: '+',
-      },
-    },
-    run(args) {
-      assertEquals(args.argA, ['abc', 'def']);
-      assertEquals(args.argB, undefined);
-    },
-  }, ['abc', 'def']);
-});
-
-test('+ nargs expected at least one argument', () => {
-  assertThrows(
-    () => {
+    }, []);
+  }),
+    await tc.step('1 argv', () => {
       komando({
-        name: NAME,
-        version: VERSION,
+        name,
+        args: {
+          argA: {
+            nargs: '?',
+          },
+          argB: {
+            nargs: '?',
+          },
+        },
+        run(args) {
+          assertEquals(args.argA, 'abc');
+          assertEquals(args.argB, undefined);
+        },
+      }, ['abc']);
+    });
+
+  await tc.step('3 argv', () => {
+    komando({
+      name,
+      args: {
+        argA: {
+          nargs: '?',
+        },
+        argB: {
+          nargs: '?',
+        },
+      },
+      run(args) {
+        assertEquals(args.argA, 'abc');
+        assertEquals(args.argB, 'def');
+      },
+    }, ['abc', 'def', 'ghi']);
+  });
+});
+
+test('* nargs with', async (tc) => {
+  await tc.step('0 argv', () => {
+    komando({
+      name,
+      args: {
+        argA: {
+          nargs: '*',
+        },
+        argB: {
+          nargs: '*',
+        },
+      },
+      run(args) {
+        assertEquals(args.argA, []);
+        assertEquals(args.argB, undefined);
+      },
+    }, []);
+  }),
+    await tc.step('1 argv', () => {
+      komando({
+        name,
+        args: {
+          argA: {
+            nargs: '*',
+          },
+          argB: {
+            nargs: '*',
+          },
+        },
+        run(args) {
+          assertEquals(args.argA, ['abc']);
+          assertEquals(args.argB, undefined);
+        },
+      }, ['abc']);
+    });
+
+  await tc.step('2 argv', () => {
+    komando({
+      name,
+      args: {
+        argA: {
+          nargs: '*',
+        },
+        argB: {
+          nargs: '*',
+        },
+      },
+      run(args) {
+        assertEquals(args.argA, ['abc', 'def']);
+        assertEquals(args.argB, undefined);
+      },
+    }, ['abc', 'def']);
+  });
+});
+
+test('+ nargs with', async (tc) => {
+  await tc.step('0 argv', () => {
+    assertThrows(
+      () => {
+        komando({
+          name,
+          args: {
+            argA: {
+              nargs: '?',
+            },
+            argB: {
+              nargs: '+',
+            },
+          },
+          run() {},
+        }, []);
+      },
+      Error,
+      'Argument argB expected at least one argument',
+    );
+  }),
+    await tc.step('1 argv', () => {
+      komando({
+        name,
         args: {
           argA: {
             nargs: '+',
@@ -114,92 +146,130 @@ test('+ nargs expected at least one argument', () => {
             nargs: '+',
           },
         },
-        run() {},
-      }, []);
-    },
-    Error,
-    'Argument argA expected at least one argument',
-  );
+        run(args) {
+          assertEquals(args.argA, ['abc']);
+          assertEquals(args.argB, undefined);
+        },
+      }, ['abc']);
+    });
+
+  await tc.step('2 argv', () => {
+    komando({
+      name,
+      args: {
+        argA: {
+          nargs: '+',
+        },
+        argB: {
+          nargs: '+',
+        },
+      },
+      run(args) {
+        assertEquals(args.argA, ['abc', 'def']);
+        assertEquals(args.argB, undefined);
+      },
+    }, ['abc', 'def']);
+  });
 });
 
-test('1 nargs', () => {
-  komando({
-    name: NAME,
-    version: VERSION,
-    args: {
-      argA: {
-        nargs: 1,
+test('1 nargs with', async (tc) => {
+  await tc.step('0 argv', () => {
+    assertThrows(
+      () => {
+        komando({
+          name,
+          args: {
+            argA: {
+              nargs: '?',
+            },
+            argB: {
+              nargs: 1,
+            },
+          },
+          run() {},
+        }, []);
       },
-      argB: {
-        nargs: 2,
-      },
-    },
-    run(args) {
-      assertEquals(args.argA, 'abc');
-      assertEquals(args.argB, ['def', 'ghi']);
-    },
-  }, ['abc', 'def', 'ghi', 'klm', 'nop']);
-});
-
-test('1 nargs expected 1 arguments', () => {
-  assertThrows(
-    () => {
+      Error,
+      'Argument argB expected 1 argument(s)',
+    );
+  }),
+    await tc.step('3 argv', () => {
       komando({
-        name: NAME,
-        version: VERSION,
+        name,
         args: {
           argA: {
-            nargs: '?',
+            nargs: 1,
           },
           argB: {
             nargs: 1,
           },
         },
-        run() {},
-      }, []);
-    },
-    Error,
-    'Argument argB expected 1 argument(s)',
-  );
+        run(args) {
+          assertEquals(args.argA, 'abc');
+          assertEquals(args.argB, 'def');
+        },
+      }, ['abc', 'def', 'ghi']);
+    });
 });
 
-test('2 nargs', () => {
-  komando({
-    name: NAME,
-    version: VERSION,
-    args: {
-      argA: {
-        nargs: 2,
+test('2 nargs with', async (tc) => {
+  await tc.step('0 argv', () => {
+    assertThrows(
+      () => {
+        komando({
+          name,
+          args: {
+            argA: {
+              nargs: '?',
+            },
+            argB: {
+              nargs: 2,
+            },
+          },
+          run() {},
+        }, []);
       },
-      argB: {
-        nargs: 2,
-      },
-    },
-    run(args) {
-      assertEquals(args.argA, ['abc', 'def']);
-      assertEquals(args.argB, ['ghi', 'klm']);
-    },
-  }, ['abc', 'def', 'ghi', 'klm', 'nop']);
-});
-
-test('2 nargs expected 2 arguments', () => {
-  assertThrows(
-    () => {
+      Error,
+      'Argument argB expected 2 argument(s)',
+    );
+  }),
+    await tc.step('5 argv', () => {
       komando({
-        name: NAME,
-        version: VERSION,
+        name,
         args: {
           argA: {
-            nargs: '?',
+            nargs: 2,
           },
           argB: {
             nargs: 2,
           },
         },
-        run() {},
-      }, []);
+        run(args) {
+          assertEquals(args.argA, ['abc', 'def']);
+          assertEquals(args.argB, ['ghi', 'klm']);
+        },
+      }, ['abc', 'def', 'ghi', 'klm', 'nop']);
+    });
+});
+
+test('? 1 2 3 * + nargs', () => {
+  komando({
+    name,
+    args: {
+      argA: { nargs: '?' },
+      argB: { nargs: 1 },
+      argC: { nargs: 2 },
+      argD: { nargs: 3 },
+      argE: { nargs: '*' },
+      argF: { nargs: '+' },
     },
-    Error,
-    'Argument argB expected 2 argument(s)',
-  );
+    run(args) {
+      assertEquals(args.argA, 'abc');
+      assertEquals(args.argB, 'def');
+      assertEquals(args.argC, ['ghi', 'klm']);
+      assertEquals(args.argD, ['nop', 'qrs', 'tuv']);
+      assertEquals(args.argE, ['wxyz']);
+      assertEquals(args.argF, undefined);
+    },
+  }, ['abc', 'def', 'ghi', 'klm', 'nop', 'qrs', 'tuv', 'wxyz']);
 });
