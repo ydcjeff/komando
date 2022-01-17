@@ -1,17 +1,10 @@
-import { assert, restoreAll, setupSnapshot, spyOn } from '../deps.ts';
-import {
-  Command,
-  defineCommand,
-  Flags,
-  groupBy,
-  komando,
-  UserCommand,
-} from '../mod.ts';
+import { assert, restoreAll, setupSnapshot, spyOn } from '../deps_test.ts';
+import { defineCommand, groupBy, komando } from '../mod.ts';
 
 const { test } = Deno;
 const assertSnapshot = await setupSnapshot(import.meta.url);
 
-const komandoOptions: UserCommand = {
+const komandoOptions = {
   name: 'root',
   version: 'v1.0.0',
   usage: 'Root command usage',
@@ -25,21 +18,21 @@ const komandoOptions: UserCommand = {
         defineCommand({ name: 'subsub1' }),
         defineCommand({ name: 'subsub2' }),
         defineCommand({ name: 'subsub3' }),
-      ]) as Command[],
+      ]),
       flags: groupBy('SUBFLAGS', {
-        subFlagA: {},
-        subFlagB: {},
-        subFlagc: {},
-      }) as Flags,
+        subFlagA: { typeFn: String },
+        subFlagB: { typeFn: String },
+        subFlagc: { typeFn: String },
+      }),
     }),
   ],
   flags: {
     parent: {
+      typeFn: String,
       short: 'p',
-      deepPass: true,
       placeholder: 'dir',
     },
-    flagA: {},
+    flagA: { typeFn: String },
   },
   args: {
     argA: {

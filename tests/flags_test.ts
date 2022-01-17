@@ -4,7 +4,7 @@ import {
   assertThrows,
   restoreAll,
   spyOn,
-} from '../deps.ts';
+} from '../deps_test.ts';
 import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;
@@ -62,21 +62,12 @@ test('version unknow flag', () => {
   );
 });
 
-test('no help in flags', () => {
-  komando({
-    name,
-    run(_, flags) {
-      assertEquals(flags, {});
-    },
-  }, []);
-});
-
 test('root long flags', () => {
   komando({
     name,
     flags: {
-      flagA: {},
-      flagB: {},
+      flagA: { typeFn: String },
+      flagB: { typeFn: Number },
     },
     run(_, flags) {
       assertEquals(flags.flagA, 'abc');
@@ -89,8 +80,8 @@ test('root short flags', () => {
   komando({
     name,
     flags: {
-      flagA: { short: 'A' },
-      flagB: { short: 'B' },
+      flagA: { typeFn: String, short: 'A' },
+      flagB: { typeFn: Number, short: 'B' },
     },
     run(_, flags) {
       assertEquals(flags.flagA, 'abc');
@@ -106,8 +97,8 @@ test('sub command long flags', () => {
       defineCommand({
         name: 'test',
         flags: {
-          flagA: {},
-          flagB: {},
+          flagA: { typeFn: String },
+          flagB: { typeFn: Number },
         },
         run(_, flags) {
           assertEquals(flags.flagA, 'abc');
@@ -128,8 +119,8 @@ test('sub command short flags', () => {
       defineCommand({
         name: 'test',
         flags: {
-          flagA: { short: 'A' },
-          flagB: { short: 'B' },
+          flagA: { typeFn: String, short: 'A' },
+          flagB: { typeFn: Number, short: 'B' },
         },
         run(_, flags) {
           assertEquals(flags.flagA, 'abc');
@@ -150,7 +141,7 @@ test('sub sub command after flags', () => {
       defineCommand({
         name: 'sub1',
         flags: {
-          flagA: {},
+          flagA: { typeFn: String },
         },
         commands: [
           defineCommand({
@@ -179,7 +170,7 @@ test('unknown flags found', () => {
     () => {
       komando({
         name,
-        flags: { known: {} },
+        flags: { known: { typeFn: Boolean } },
         run() {},
       }, ['--unknown']);
     },
@@ -191,7 +182,7 @@ test('unknown flags found', () => {
 test('kebab case long flags', () => {
   komando({
     name,
-    flags: { camelCase: {} },
+    flags: { camelCase: { typeFn: Boolean } },
     run(_, flags) {
       assert(flags.camelCase);
     },
@@ -201,47 +192,9 @@ test('kebab case long flags', () => {
 test('kebab case short flags', () => {
   komando({
     name,
-    flags: { camelCase: { short: 'C' } },
+    flags: { camelCase: { typeFn: Boolean, short: 'C' } },
     run(_, flags) {
       assert(flags.camelCase);
     },
   }, ['-C']);
-});
-
-test('duplicate flags', () => {
-  assertThrows(
-    () => {
-      komando({
-        name,
-        flags: { flagA: { deepPass: true } },
-        commands: [
-          defineCommand({
-            name: 'duplicate',
-            flags: { flagA: {} },
-          }),
-        ],
-      }, ['duplicate']);
-    },
-    Error,
-    'Found duplicate flags when merging inherited and child flags:',
-  );
-});
-
-test('inherited flags', () => {
-  komando({
-    name,
-    flags: { parent: { deepPass: true } },
-    commands: [
-      defineCommand({
-        name: 'child',
-        flags: { child: {} },
-        run(_, flags) {
-          assertEquals(flags.parent, true);
-        },
-      }),
-    ],
-    run() {
-      assert(false, 'sub command run should be called, not this run');
-    },
-  }, ['child', '--parent']);
 });

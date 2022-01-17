@@ -1,6 +1,12 @@
 import { parse } from './deps.ts';
 
-type RootCommand<F, A> = Omit<SubCommand<F, A>, 'aliases'> & {
+type CommandOptions<F extends Flags, A extends Args> = {
+  /**
+   * The name of the command.
+   *
+   * @example 'komando'
+   */
+  name: string;
   /**
    * Version number of this CLI app.
    *
@@ -8,22 +14,6 @@ type RootCommand<F, A> = Omit<SubCommand<F, A>, 'aliases'> & {
    * @example 'v1.0.0'
    */
   version?: string;
-  /**
-   * Function for showing version info. This function can be used to show
-   * other related version info.
-   *
-   * @default console.log(`${name}@${version}`)
-   */
-  showVersion?: (name: string, version: string) => void;
-};
-
-type SubCommand<F, A> = {
-  /**
-   * The name of the command.
-   *
-   * @example 'komando'
-   */
-  name: string;
   /**
    * Command usage.
    *
@@ -35,7 +25,7 @@ type SubCommand<F, A> = {
    * Command description.
    *
    * @default undefined
-   * @example 'Type first and safe CLI app builder for Deno'
+   * @example 'Type safe CLI devtool for Deno and Node'
    */
   description?: string;
   /**
@@ -52,7 +42,7 @@ type SubCommand<F, A> = {
    * Root command should not have defined `aliases`.**_
    *
    * @default undefined
-   * @example ['i', 'isntall']
+   * @example ['i', 'add']
    */
   aliases?: string[];
   /**
@@ -60,9 +50,9 @@ type SubCommand<F, A> = {
    *
    * @default undefined
    */
-  commands?: SubCommand<F, A>[];
+  commands?: Command[];
   /**
-   * Options and flags for this command.
+   * Flags for this command.
    *
    * @default undefined
    */
@@ -73,13 +63,6 @@ type SubCommand<F, A> = {
    * @default undefined
    */
   args?: A;
-  /**
-   * Function to run when this command is found in `Deno.args`. When the
-   * respective `run` function is undefined, help message will be shown instead.
-   *
-   * @default undefined
-   */
-  run?: <rA, rF>(args: rA, flags: rF) => void;
   /**
    * Put this command under this group name in the help message.
    *
@@ -93,15 +76,52 @@ type SubCommand<F, A> = {
    * @default undefined
    */
   epilog?: string;
-};
-
-type Flag = {
   /**
-   * Flag description
+   * Function to run when this command is found in `Deno.args` or
+   * `process.argv.slice(2)`. When the respective `run` function is undefined,
+   * help message will be shown instead.
    *
    * @default undefined
    */
-  description?: string;
+  run?: RunFunction<F, A>;
+  /**
+   * Function for showing version info. This function can be used to show
+   * other related version info.
+   *
+   * @default console.log(`${name}@${version}`)
+   */
+  showVersion?: (name: string, version: string) => void;
+};
+
+type Command<
+  F extends Flags = Record<never, never>,
+  A extends Args = Record<never, never>,
+> = CommandOptions<F, A>;
+
+type RunFunction<F extends Flags, A extends Args> = (
+  args: ParseArgs<A>,
+  flags: ParseFlags<F>,
+) => void | Promise<void>;
+
+type FlagDefault<DefaultType = unknown> = {
+  defaultV?: DefaultType;
+};
+
+type FlagTypeFn<TF = TypeFunction> = {
+  typeFn: TF;
+};
+
+type TypeFunction<ReturnType = unknown> = (value: unknown) => ReturnType;
+
+type ParseFlags<F extends Flags> = {
+  [K in keyof F]: InferFlag<F[K]>;
+};
+
+type InferFlag<F extends Flag> = F extends FlagTypeFn<TypeFunction<infer T>>
+  ? F extends FlagDefault<infer D> ? T | D : T | undefined
+  : never;
+
+type Flag = FlagTypeFn & FlagDefault & Arg & {
   /**
    * Short flag.
    *
@@ -118,12 +138,6 @@ type Flag = {
    * @example 'deno.jsonc'
    */
   defaultV?: unknown;
-  /**
-   * Whether this flag should be passed deeply to all sub-commands' flags.
-   *
-   * @default false
-   */
-  deepPass?: boolean;
   /**
    * The placeholder to appear in the help message.
    * It defaults to the long flag name.
@@ -147,9 +161,13 @@ type Flags = {
   [long: string]: Flag;
 };
 
+type ParseArgs<A extends Args> = {
+  [K in keyof A]: Arg;
+};
+
 type Arg = {
   /**
-   * Number of values this argument requires.
+   * Number of values this argument/flag requires.
    *
    * `?`, `*`, `+` works same as in JavaScript Regex meaning.
    *
@@ -166,7 +184,7 @@ type Arg = {
    */
   nargs?: number | '?' | '*' | '+';
   /**
-   * Argument description.
+   * Argument/Flag description.
    *
    * @default undefined
    */
@@ -180,71 +198,52 @@ type Args = {
 /**
  * Komando main function to define a CLI app.
  *
- * @param rootCommand Root command to define
+ * @param options Root options to define
  * @param argv Argument values from Deno (Deno.args)
  */
 export function komando<F extends Flags, A extends Args>(
-  rootCommand: RootCommand<F, A>,
-  argv: string[] = Deno.args,
+  options: CommandOptions<F, A>,
+  argv = Deno.args,
 ) {
-  if (!rootCommand.flags) rootCommand.flags = {} as F;
-  if (!rootCommand.showVersion) {
-    rootCommand.showVersion = (name, version) =>
-      console.log(`${name}@${version}`);
+  const resolved = defineCommand(options);
+  if (!resolved.showVersion) {
+    resolved.showVersion = (name, version) => console.log(`${name}@${version}`);
   }
-  if (rootCommand.version) {
-    (rootCommand.flags as Flags).version = {
-      short: '-V',
-      description: 'Show version info',
-      deepPass: true,
-      defaultV: false,
-      groupName: 'Flags',
-    };
-  }
-  (rootCommand.flags as Flags).help = {
-    short: '-h',
-    description: 'Show this message',
-    deepPass: true,
-    defaultV: false,
-    groupName: 'Flags',
-  };
-  const resolved = defineCommand(rootCommand);
+
   komandoImpl(resolved, argv);
 }
 
 /**
- * Helper function to set default values to the sub-command. So, users do not
- * need to define the required values in {@link komando} main function.
- * This also provide type helper with completions.
+ * A function to create a sub-command.
  *
- * @param command Sub-command to define
+ * @param options Sub-command options to define
  * @returns The sub-command with required properties defined
  */
-export function defineCommand<
-  F extends Flags & { help?: Flag; version?: Flag },
-  A extends Args,
->(
-  command: SubCommand<F, A>,
-): SubCommand<F, A> {
-  if (command.commands) {
-    groupBy('Commands', command.commands as SubCommand<Flags, Args>[]);
-  }
-  if (command.flags) groupBy('Flags', command.flags);
+export function defineCommand<F extends Flags, A extends Args>(
+  options: CommandOptions<F, A>,
+): Command {
+  const resolved = {
+    commands: [],
+    flags: {} as Flags,
+    args: {} as Args,
+    ...options,
+  };
 
-  // we require long flag name, so loop again
-  for (const key in command.flags) {
-    const val = command.flags[key];
-    if (!val.placeholder) val.placeholder = key;
-    if (!val.deepPass) val.deepPass = false;
-  }
+  groupBy('Commands', resolved.commands);
+  groupBy('Flags', resolved.flags);
 
-  if (command.args) {
-    for (const val of Object.values(command.args)) {
-      if (!val.nargs) val.nargs = 1;
-    }
+  for (const key in resolved.flags) {
+    const val = resolved.flags[key];
+    if (!val.placeholder && val.typeFn !== Boolean) val.placeholder = key;
+    if (val.typeFn === Boolean) val.placeholder = undefined;
+    val.defaultV = false;
   }
 
-  return command;
+  for (const val of Object.values(resolved.args)) {
+    if (!val.nargs) val.nargs = 1;
+  }
+
+  return resolved as Command;
 }
 
 /**
@@ -255,24 +254,14 @@ export function defineCommand<
  * @param toGroup Array of `Command` or `Flags` to group
  * @returns Array of Commands or Flags with `groupName` defined
  */
-export function groupBy<
-  T extends Flags | SubCommand<F, A>[],
-  F extends Flags,
-  A extends Args,
->(
-  name: string,
-  toGroup: T,
-): T {
-  for (const val of Object.values(toGroup) as SubCommand<F, A>[] | Flag[]) {
+export function groupBy<T>(name: string, toGroup: T) {
+  for (const val of Object.values(toGroup)) {
     if (!val.groupName) val.groupName = name;
   }
   return toGroup;
 }
 
-function komandoImpl<F extends Flags, A extends Args>(
-  currentCommand: RootCommand<F, A>,
-  argv: string[],
-) {
+function komandoImpl(currentCommand: Command, argv: string[]) {
   const { name, version, showVersion } = currentCommand;
   if ((argv.includes('-V') || argv.includes('--version')) && version) {
     showVersion!(name, version);
@@ -286,36 +275,38 @@ function komandoImpl<F extends Flags, A extends Args>(
   do {
     // reset here
     hasSubCommands = false;
-    if (currentCommand.commands) {
-      for (const cmd of currentCommand.commands) {
-        const val = argv[0];
-        if (cmd.name === val || cmd.aliases?.includes(val as string)) {
-          const flags = resolveFlags(currentCommand.flags!, cmd.flags!);
-          currentCommand = cmd;
-          currentCommand.flags = flags as F;
-          argv.shift();
-          hasSubCommands = !!cmd.commands;
-          break;
-        }
+    for (const cmd of currentCommand.commands!) {
+      const val = argv[0];
+      if (cmd.name === val || cmd.aliases?.includes(val as string)) {
+        currentCommand = cmd;
+        argv.shift();
+        hasSubCommands = !!cmd.commands;
+        break;
       }
     }
   } while (hasSubCommands);
 
   if (argv.includes('-h') || argv.includes('--help') || !currentCommand.run) {
-    showHelp(name, currentCommand);
+    showHelp(name, currentCommand, version);
     return;
   }
 
   const unknowns: Record<string, unknown> = {};
-  const { flags, args, run } = currentCommand;
+  const flags = currentCommand.flags as Flags;
+  const args = currentCommand.args as Args;
+  const run = currentCommand.run;
+
   const { _: inputArgs, ...inputFlags } = parse(argv, {
     alias: Object.fromEntries(
-      Object.entries(flags!).map((
+      Object.entries(flags).map((
         [k, v],
       ) => [k, [toKebabCase(k), v.short ?? '']]),
     ),
+    boolean: Object.entries(flags).filter(([_, v]) => v.typeFn === Boolean).map(
+      ([k, _]) => k,
+    ),
     default: Object.fromEntries(
-      Object.entries(flags!).map(([k, v]) => [k, v.defaultV ?? undefined]),
+      Object.entries(flags).map(([k, v]) => [k, v.defaultV ?? undefined]),
     ),
     unknown(arg, _, v) {
       // only collect unknown flags
@@ -331,44 +322,41 @@ function komandoImpl<F extends Flags, A extends Args>(
     throw new Error('Unknown flags found. See the above table.');
   }
 
-  const rFlags: Record<string, unknown> = {};
+  const parsedFlags: ParseFlags<typeof flags> = {};
   for (const iflag in inputFlags) {
     const val = inputFlags[iflag];
     if (iflag in flags!) {
-      rFlags[iflag] = val;
+      parsedFlags[iflag] = flags[iflag].typeFn(val);
     }
   }
 
-  const rArgs: Record<string, unknown> = {};
+  const parsedArgs: Record<string, unknown> = {};
   for (const arg in args) {
     const nargs = args[arg].nargs;
 
     if (nargs === '?') {
-      rArgs[arg] = inputArgs.shift();
+      parsedArgs[arg] = inputArgs.shift();
     } else if (nargs === '*') {
-      rArgs[arg] = [...inputArgs];
+      parsedArgs[arg] = [...inputArgs];
       break;
     } else if (nargs === '+') {
       if (inputArgs.length < 1) {
         throw new Error(`Argument ${arg} expected at least one argument`);
       }
-      rArgs[arg] = [...inputArgs];
+      parsedArgs[arg] = [...inputArgs];
       break;
     } else if (typeof nargs === 'number') {
       if (inputArgs.length < nargs) {
         throw new Error(`Argument ${arg} expected ${nargs} argument(s).`);
       }
-      rArgs[arg] = nargs === 1 ? inputArgs.shift() : inputArgs.splice(0, nargs);
+      parsedArgs[arg] = nargs === 1
+        ? inputArgs.shift()
+        : inputArgs.splice(0, nargs);
     }
   }
 
-  type rArgsType = typeof rArgs;
-  type rFlagsType = typeof rFlags;
-  if (run) {
-    run<
-      { [K in keyof rArgsType]: rArgsType[K] },
-      { [K in keyof rFlagsType]: rFlagsType[K] }
-    >(rArgs, rFlags);
+  if (typeof run === 'function') {
+    run(parsedArgs, parsedFlags);
   }
 }
 
@@ -377,22 +365,39 @@ function toKebabCase(str: string) {
   return str.replace(camelCaseRE, '-$1').toLowerCase();
 }
 
-function showHelp<F extends Flags, A extends Args>(
-  bin: string,
-  command: RootCommand<F, A> & SubCommand<F, A>,
-) {
+function showHelp(bin: string, command: Command, version?: string) {
   const out: Record<string, string | string[]> = {};
   const { columns } = Deno.consoleSize(Deno.stdout.rid);
   const {
     description,
     example,
     commands,
-    flags,
-    args,
     usage,
     aliases,
     epilog,
+    name,
   } = command;
+
+  const flags = command.flags as Flags;
+  const args = command.args as Args;
+
+  flags.help = {
+    typeFn: Boolean,
+    defaultV: false,
+    short: 'h',
+    description: 'Show this message',
+    groupName: bin === name ? 'Flags' : 'Inherited Flags',
+  };
+
+  if (version) {
+    flags.version = {
+      typeFn: Boolean,
+      defaultV: false,
+      short: 'V',
+      description: 'Show version info',
+      groupName: bin === name ? 'Flags' : 'Inherited Flags',
+    };
+  }
 
   const indent = (str: string) => '    ' + str;
   const fmt = (title: string, body: string) => {
@@ -487,23 +492,4 @@ function showHelp<F extends Flags, A extends Args>(
     console.log('\n  ' + key + out[key]);
   }
   if (epilog) console.log(epilog);
-}
-
-function resolveFlags(parent: Flags, child: Flags): Flags {
-  const out: Flags = {};
-  for (const cFlag in child) {
-    if (cFlag in parent && parent[cFlag].deepPass) {
-      throw new Error(
-        `Found duplicate flags when merging inherited and child flags: ` +
-          `"${cFlag}"`,
-      );
-    }
-    out[cFlag] = child[cFlag];
-  }
-  const temp = Object.entries(parent).filter(([_, v]) => v.deepPass);
-  temp.forEach(([_, v]) => v.groupName = 'Inherited Flags');
-  return Object.assign(
-    out,
-    Object.fromEntries(temp),
-  );
 }

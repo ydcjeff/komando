@@ -1,31 +1,16 @@
-import { assert, assertThrows } from '../deps.ts';
+import { assert } from '../deps_test.ts';
 import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;
 const name = import.meta.url;
 
-test('root command', async (tc) => {
-  await tc.step('default', () => {
-    komando({
-      name,
-      run() {
-        assert(true);
-      },
-    }, []);
-  });
-
-  await tc.step('no alias', () => {
-    assertThrows(
-      () => {
-        komando({
-          name,
-          aliases: [],
-        });
-      },
-      Error,
-      'root command should not have aliases',
-    );
-  });
+test('root command', () => {
+  komando({
+    name,
+    run() {
+      assert(true);
+    },
+  }, []);
 });
 
 test('sub command', async (tc) => {

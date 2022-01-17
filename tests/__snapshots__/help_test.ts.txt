@@ -42,9 +42,6 @@ export const sub_one_cmd_help = `
         --subFlagc [subFlagc]
 
   Inherited Flags
-    -p, --parent [dir]
-
-  Flags
     -h, --help                   Show this message
     -V, --version                Show version info`;
 

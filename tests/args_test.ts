@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from '../deps.ts';
+import { assertEquals, assertThrows } from '../deps_test.ts';
 import { komando } from '../mod.ts';
 
 const { test } = Deno;
