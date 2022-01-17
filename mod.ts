@@ -111,7 +111,8 @@ type FlagTypeFn<TF = TypeFunction> = {
   typeFn: TF;
 };
 
-type TypeFunction<ReturnType = unknown> = (value: unknown) => ReturnType;
+// deno-lint-ignore no-explicit-any
+type TypeFunction<ReturnType = unknown> = (value: any) => ReturnType;
 
 type ParseFlags<F extends Flags> = {
   [K in keyof F]: InferFlag<F[K]>;
@@ -235,8 +236,10 @@ export function defineCommand<F extends Flags, A extends Args>(
   for (const key in resolved.flags) {
     const val = resolved.flags[key];
     if (!val.placeholder && val.typeFn !== Boolean) val.placeholder = key;
-    if (val.typeFn === Boolean) val.placeholder = undefined;
-    val.defaultV = false;
+    if (val.typeFn === Boolean) {
+      val.placeholder = undefined;
+      val.defaultV = false;
+    }
   }
 
   for (const val of Object.values(resolved.args)) {
@@ -300,7 +303,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
     alias: Object.fromEntries(
       Object.entries(flags).map((
         [k, v],
-      ) => [k, [toKebabCase(k), v.short ?? '']]),
+      ) => [k, [camelCaseRE.test(k) ? toKebabCase(k) : '', v.short ?? '']]),
     ),
     boolean: Object.entries(flags).filter(([_, v]) => v.typeFn === Boolean).map(
       ([k, _]) => k,
@@ -326,7 +329,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
   for (const iflag in inputFlags) {
     const val = inputFlags[iflag];
     if (iflag in flags!) {
-      parsedFlags[iflag] = flags[iflag].typeFn(val);
+      parsedFlags[iflag] = val ? flags[iflag].typeFn(val) : val;
     }
   }
 
@@ -424,18 +427,21 @@ function showHelp(bin: string, command: Command, version?: string) {
 
   const maxLen = Math.max(
     ...Object.entries(flags!).map(([k, v]) => {
+      k = toKebabCase(k);
       const { short, placeholder } = v;
       return (short && placeholder)
         ? `-${short}, --${k} <${placeholder}>`.length
         : short
         ? `-${short}, --${k}`.length
-        : `    --${k} <${placeholder}>`.length;
+        : placeholder
+        ? `    --${k} <${placeholder}>`.length
+        : `    --${k}`.length;
     }),
   ) + 4; // 4 here is gap between commands/flags/args and desc;
 
   // 4 here is commands/flags/args indentation
   const descIndent = maxLen + 4;
-  const descWidth = columns - descIndent;
+  const descWidth = columns - descIndent - 2; // right padding for scrollbar
   // https://stackoverflow.com/a/51506718
   const wrapRE = new RegExp(
     `(?![^\\n]{1,${descWidth}}$)([^\\n]{1,${descWidth}})\\s`,
@@ -459,12 +465,13 @@ function showHelp(bin: string, command: Command, version?: string) {
     for (const flag in flags) {
       const { description, defaultV, placeholder, short, groupName } =
         flags[flag];
-      let temp = (short ? `-${short},` : '   ') + ` --${flag}`;
-      if (placeholder) temp += ` [${placeholder}]`;
-      if (description) {
-        temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);
-      }
-      if (defaultV) temp += ` [default: ${defaultV}]`;
+      let temp = (short ? `-${short},` : '   ') + ` --${toKebabCase(flag)}`;
+      if (placeholder) temp += ` <${placeholder}>`;
+      if (description || defaultV) temp += ' '.padEnd(maxLen - temp.length);
+      temp += wrapAndIndent(
+        (description ? description : '') +
+          (defaultV ? ` (default: ${defaultV})` : ''),
+      );
       fmt(groupName!, temp);
     }
   }
