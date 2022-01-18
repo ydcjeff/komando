@@ -14,7 +14,7 @@ export const root_cmd_help = `
     -h, --help              Show this message
     -V, --version           Show version info
 
-  Args
+  Arguments
     [argA]                  argA desc
     [argB...]               argB desc
     <argC>...               argC desc
@@ -24,11 +24,11 @@ export const sub_one_cmd_help = `
   Description
     sub1 cmd desc
 
-  Aliases
+  Alias
     s1
 
   Usage
-    $ root [command] [flags]
+    $ root sub1 [command] [flags]
 
   SUBCOMMANDS
     subsub1
@@ -58,6 +58,6 @@ export const minimal_cmd_help_flags___args = `
   Flags
     -h, --help    Show this message
 
-  Args
+  Arguments
     <argA>`;
 

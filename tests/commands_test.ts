@@ -1,4 +1,4 @@
-import { assert } from '../deps_test.ts';
+import { assert, assertThrows } from '../deps_test.ts';
 import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;
@@ -37,7 +37,7 @@ test('sub command', async (tc) => {
       commands: [
         defineCommand({
           name: 'dev',
-          aliases: ['d'],
+          alias: 'd',
           run() {
             assert(true);
           },
@@ -82,11 +82,11 @@ test('sub sub command', async (tc) => {
       commands: [
         defineCommand({
           name: 'sub1',
-          aliases: ['s1'],
+          alias: 's1',
           commands: [
             defineCommand({
               name: 'sub2',
-              aliases: ['s2'],
+              alias: 's2',
               run() {
                 assert(true);
               },
@@ -102,4 +102,36 @@ test('sub sub command', async (tc) => {
       },
     }, ['s1', 's2']);
   });
+});
+
+test('duplicate commands', () => {
+  assertThrows(
+    () => {
+      komando({
+        name,
+        commands: [
+          defineCommand({ name: 'dupli' }),
+          defineCommand({ name: 'dupli' }),
+        ],
+      });
+    },
+    Error,
+    'Duplicate subcommand found in',
+  );
+});
+
+test('duplicate commands alias', () => {
+  assertThrows(
+    () => {
+      komando({
+        name,
+        commands: [
+          defineCommand({ name: 'abc', alias: 'd' }),
+          defineCommand({ name: 'def', alias: 'd' }),
+        ],
+      });
+    },
+    Error,
+    'Duplicate alias found in',
+  );
 });

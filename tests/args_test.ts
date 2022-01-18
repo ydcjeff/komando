@@ -190,7 +190,7 @@ test('1 nargs with', async (tc) => {
         }, []);
       },
       Error,
-      'Argument argB expected 1 argument(s)',
+      'Argument argB expected 1 argument',
     );
   }),
     await tc.step('3 argv', () => {

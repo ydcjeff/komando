@@ -13,7 +13,7 @@ const komandoOptions = {
     defineCommand({
       name: 'sub1',
       description: 'sub1 cmd desc',
-      aliases: ['s1'],
+      alias: 's1',
       commands: groupBy('SUBCOMMANDS', [
         defineCommand({ name: 'subsub1' }),
         defineCommand({ name: 'subsub2' }),

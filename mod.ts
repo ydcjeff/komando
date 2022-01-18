@@ -41,14 +41,22 @@ export function defineCommand<F extends Flags, A extends Args>(
     ...options,
   };
 
-  const alias = resolved.commands.map((v) => v.alias);
   if (
-    (new Set(resolved.commands.map((v) => v.name)).size !==
-      resolved.commands.length) || new Set(alias).size !== alias.length
+    new Set(resolved.commands.map((v) => v.name)).size !==
+      resolved.commands.length
   ) {
     throw new Error(
-      `Duplicate subcommand or alias found in: ${resolved.name} command.`,
+      `Duplicate subcommand found in: ${resolved.name} command.`,
     );
+  }
+
+  const alias = resolved.commands.map((v) => v.alias).filter((v) => v);
+  if (alias) {
+    if (new Set(alias).size !== alias.length) {
+      throw new Error(
+        `Duplicate alias found in: ${resolved.name} command.`,
+      );
+    }
   }
 
   groupBy('Commands', resolved.commands);
@@ -56,10 +64,6 @@ export function defineCommand<F extends Flags, A extends Args>(
 
   for (const key in resolved.flags) {
     const val = resolved.flags[key];
-
-    if (Array.isArray(val.typeFn) && val.typeFn.length > 1) {
-      throw new Error('typFn array should only have one item.');
-    }
 
     const typeFn = Array.isArray(val.typeFn) ? val.typeFn[0] : val.typeFn;
     if (!val.placeholder && typeFn !== Boolean) val.placeholder = key;
@@ -118,10 +122,14 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
     }
   } while (hasSubCommands);
 
-  if (argv.includes('-h') || argv.includes('--help') || !currentCommand.run) {
+  if (argv.includes('-h') || argv.includes('--help')) {
     showHelp(name, currentCommand, version);
-    if (!currentCommand.run) Deno.exit(1);
     return;
+  }
+
+  if (!currentCommand.run) {
+    showHelp(name, currentCommand, version);
+    Deno.exit(1);
   }
 
   const unknowns: Record<string, unknown> = {};
@@ -154,7 +162,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
 
   if (Object.keys(unknowns).length) {
     console.table(unknowns);
-    console.error('Unknown flags found. See the above table.');
+    error('Unknown flags found. See the above table.');
     Deno.exit(1);
   }
 
@@ -255,7 +263,7 @@ function showHelp(bin: string, command: Command, version?: string) {
     usage ? usage : '$ ' +
       (bin === name ? bin : `${bin} ${name}`) +
       (commands?.length ? ' [command]' : '') +
-      (args && Object.keys(args.length) ? ' [args]' : '') +
+      (args && Object.keys(args).length ? ' [args]' : '') +
       ' [flags]',
   );
 
@@ -267,7 +275,7 @@ function showHelp(bin: string, command: Command, version?: string) {
       const { short, placeholder, typeFn } = v;
       const nargs = Array.isArray(typeFn) ? '+' : '1';
       const temp = (short ? `-${short}, ` : '    ') + `--${k}` +
-        (placeholder ? formatNargs(nargs, placeholder) : '');
+        (placeholder ? ' ' + formatNargs(nargs, placeholder) : '');
       return temp.length;
     }),
   ) + 4; // 4 here is gap between commands/flags/args and desc;
@@ -322,7 +330,7 @@ function showHelp(bin: string, command: Command, version?: string) {
   }
 
   for (const key in out) {
-    console.log('\n  ' + key.toLocaleUpperCase() + out[key]);
+    console.log('\n  ' + key + out[key]);
   }
   if (epilog) console.log(epilog);
 }
@@ -337,4 +345,9 @@ function formatNargs(nargs: '1' | '?' | '*' | '+', placeholder: string) {
     : nargs === '1'
     ? `<${placeholder}>`
     : placeholder;
+}
+
+function error(msg: string) {
+  console.error('Error: ' + msg);
+  console.error('Try --help for more info.');
 }

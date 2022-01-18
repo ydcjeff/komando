@@ -1,10 +1,4 @@
-import {
-  assert,
-  assertEquals,
-  assertThrows,
-  restoreAll,
-  spyOn,
-} from '../deps_test.ts';
+import { assert, assertEquals, restoreAll, spyOn } from '../deps_test.ts';
 import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;
@@ -47,19 +41,6 @@ test('version custom log', () => {
   assertEquals(spy.callCount, 1);
   assertEquals(spy.calls[0][0], 'flags_test v1.0.0 Deno');
   restoreAll();
-});
-
-test('version unknow flag', () => {
-  assertThrows(
-    () => {
-      komando({
-        name,
-        run() {},
-      }, ['-V']);
-    },
-    Error,
-    'Unknown flags found. See the above table.',
-  );
 });
 
 test('root long flags', () => {
@@ -163,20 +144,6 @@ test('sub sub command after flags', () => {
       assert(false, 'sub command run should be called, not this run');
     },
   }, ['sub1', '--flagA', 'sub2']);
-});
-
-test('unknown flags found', () => {
-  assertThrows(
-    () => {
-      komando({
-        name,
-        flags: { known: { typeFn: Boolean } },
-        run() {},
-      }, ['--unknown']);
-    },
-    Error,
-    'Unknown flags found. See the above table.',
-  );
 });
 
 test('kebab case long flags', () => {
