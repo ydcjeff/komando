@@ -11,8 +11,8 @@ import {
 /**
  * Komando main function to define a CLI app.
  *
- * @param options Root options to define
- * @param argv Argument values from Deno (Deno.args)
+ * @param options Root commands options to define
+ * @param argv Argument values from Deno or Node
  */
 export function komando<F extends Flags, A extends Args>(
   options: CommandOptions<F, A>,
@@ -22,7 +22,6 @@ export function komando<F extends Flags, A extends Args>(
   if (!resolved.showVersion) {
     resolved.showVersion = (name, version) => console.log(`${name}@${version}`);
   }
-
   komandoImpl(resolved, argv);
 }
 
@@ -42,13 +41,29 @@ export function defineCommand<F extends Flags, A extends Args>(
     ...options,
   };
 
+  const alias = resolved.commands.map((v) => v.alias);
+  if (
+    (new Set(resolved.commands.map((v) => v.name)).size !==
+      resolved.commands.length) || new Set(alias).size !== alias.length
+  ) {
+    throw new Error(
+      `Duplicate subcommand or alias found in: ${resolved.name} command.`,
+    );
+  }
+
   groupBy('Commands', resolved.commands);
   groupBy('Flags', resolved.flags);
 
   for (const key in resolved.flags) {
     const val = resolved.flags[key];
-    if (!val.placeholder && val.typeFn !== Boolean) val.placeholder = key;
-    if (val.typeFn === Boolean) {
+
+    if (Array.isArray(val.typeFn) && val.typeFn.length > 1) {
+      throw new Error('typFn array should only have one item.');
+    }
+
+    const typeFn = Array.isArray(val.typeFn) ? val.typeFn[0] : val.typeFn;
+    if (!val.placeholder && typeFn !== Boolean) val.placeholder = key;
+    if (typeFn === Boolean) {
       val.placeholder = undefined;
       val.defaultV = false;
     }
@@ -63,6 +78,8 @@ export function defineCommand<F extends Flags, A extends Args>(
 
 /**
  * Helper function that set `groupName` property of Array of `Command` or `Flags`
+ * if `groupName` is undefined.
+ *
  * This function is used to group many commands or flags.
  *
  * @param name Group name
@@ -92,7 +109,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
     hasSubCommands = false;
     for (const cmd of currentCommand.commands!) {
       const val = argv[0];
-      if (cmd.name === val || cmd.aliases?.includes(val as string)) {
+      if (cmd.name === val || cmd.alias === val) {
         currentCommand = cmd;
         argv.shift();
         hasSubCommands = !!cmd.commands;
@@ -103,6 +120,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
 
   if (argv.includes('-h') || argv.includes('--help') || !currentCommand.run) {
     showHelp(name, currentCommand, version);
+    if (!currentCommand.run) Deno.exit(1);
     return;
   }
 
@@ -118,9 +136,10 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
         [k, v],
       ) => [k, [camelCaseRE.test(k) ? toKebabCase(k) : '', v.short ?? '']]),
     ),
-    boolean: Object.entries(flags).filter(([_, v]) => v.typeFn === Boolean).map(
-      ([k, _]) => k,
-    ),
+    boolean: Object.entries(flags).filter(([_, v]) => {
+      const typeFn = Array.isArray(v.typeFn) ? v.typeFn[0] : v.typeFn;
+      return typeFn === Boolean;
+    }).map(([k, _]) => k),
     default: Object.fromEntries(
       Object.entries(flags).map(([k, v]) => [k, v.defaultV ?? undefined]),
     ),
@@ -135,12 +154,13 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
 
   if (Object.keys(unknowns).length) {
     console.table(unknowns);
-    throw new Error('Unknown flags found. See the above table.');
+    console.error('Unknown flags found. See the above table.');
+    Deno.exit(1);
   }
 
   const parsedFlags: ParseFlags<typeof flags> = {};
   for (const iflag in inputFlags) {
-    if (iflag in flags!) {
+    if (iflag in flags) {
       const val = inputFlags[iflag];
       const { typeFn } = flags[iflag];
       if (Array.isArray(typeFn)) {
@@ -158,7 +178,11 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
   for (const arg in args) {
     const nargs = args[arg].nargs;
 
-    if (nargs === '?') {
+    if (nargs === '1' && inputArgs.length < +nargs) {
+      throw new Error(`Argument ${arg} expected 1 argument.`);
+    }
+
+    if (nargs === '?' || nargs === '1') {
       // @ts-expect-error any is not assignable to type never
       parsedArgs[arg] = inputArgs.shift();
     } else if (nargs === '*') {
@@ -172,18 +196,10 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
       // @ts-expect-error any is not assignable to type never
       parsedArgs[arg] = [...inputArgs];
       break;
-    } else if (nargs === '1') {
-      if (inputArgs.length < +nargs) {
-        throw new Error(`Argument ${arg} expected ${nargs} argument(s).`);
-      }
-      // @ts-expect-error any is not assignable to type never
-      parsedArgs[arg] = inputArgs.shift();
     }
   }
 
-  if (typeof run === 'function') {
-    run(parsedArgs, parsedFlags);
-  }
+  if (typeof run === 'function') run(parsedArgs, parsedFlags);
 }
 
 const camelCaseRE = /\B([A-Z])/g;
@@ -199,7 +215,7 @@ function showHelp(bin: string, command: Command, version?: string) {
     example,
     commands,
     usage,
-    aliases,
+    alias,
     epilog,
     name,
   } = command;
@@ -232,33 +248,27 @@ function showHelp(bin: string, command: Command, version?: string) {
   };
 
   if (description) fmt('Description', description);
-  if (aliases?.length) fmt('Aliases', aliases.join(', '));
+  if (alias) fmt('Alias', alias);
 
   fmt(
     'Usage',
-    usage
-      ? `${usage}`
-      : `$ ${bin}${commands?.length ? ' [command]' : ''}${
-        args &&
-          Object.keys(args).length
-          ? ' [args]'
-          : ''
-      } [flags]`,
+    usage ? usage : '$ ' +
+      (bin === name ? bin : `${bin} ${name}`) +
+      (commands?.length ? ' [command]' : '') +
+      (args && Object.keys(args.length) ? ' [args]' : '') +
+      ' [flags]',
   );
 
   if (example) fmt('Example', example);
 
   const maxLen = Math.max(
-    ...Object.entries(flags!).map(([k, v]) => {
+    ...Object.entries(flags).map(([k, v]) => {
       k = toKebabCase(k);
-      const { short, placeholder } = v;
-      return (short && placeholder)
-        ? `-${short}, --${k} <${placeholder}>`.length
-        : short
-        ? `-${short}, --${k}`.length
-        : placeholder
-        ? `    --${k} <${placeholder}>`.length
-        : `    --${k}`.length;
+      const { short, placeholder, typeFn } = v;
+      const nargs = Array.isArray(typeFn) ? '+' : '1';
+      const temp = (short ? `-${short}, ` : '    ') + `--${k}` +
+        (placeholder ? formatNargs(nargs, placeholder) : '');
+      return temp.length;
     }),
   ) + 4; // 4 here is gap between commands/flags/args and desc;
 
@@ -275,8 +285,8 @@ function showHelp(bin: string, command: Command, version?: string) {
 
   if (commands?.length) {
     for (const cmd of commands) {
-      const { name, aliases, description, groupName } = cmd;
-      let temp = name + (aliases?.length ? `, ${aliases.join(', ')}` : '');
+      const { name, alias, description, groupName } = cmd;
+      let temp = name + (alias ? `, ${alias}` : '');
       if (description) {
         temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);
       }
@@ -284,22 +294,20 @@ function showHelp(bin: string, command: Command, version?: string) {
     }
   }
 
-  if (flags) {
-    for (const flag in flags) {
-      const { description, defaultV, placeholder, short, groupName, typeFn } =
-        flags[flag];
-      let temp = (short ? `-${short},` : '   ') + ` --${toKebabCase(flag)}`;
-      if (placeholder) {
-        temp += ' ' +
-          formatNargs(Array.isArray(typeFn) ? '+' : '1', placeholder);
-      }
-      if (description || defaultV) temp += ' '.padEnd(maxLen - temp.length);
-      temp += wrapAndIndent(
-        (description ? description : '') +
-          (defaultV ? ` (default: ${defaultV})` : ''),
-      );
-      fmt(groupName!, temp);
+  for (const flag in flags) {
+    const { description, defaultV, placeholder, short, groupName, typeFn } =
+      flags[flag];
+    let temp = (short ? `-${short},` : '   ') + ` --${toKebabCase(flag)}`;
+    if (placeholder) {
+      temp += ' ' +
+        formatNargs(Array.isArray(typeFn) ? '+' : '1', placeholder);
     }
+    if (description || defaultV) temp += ' '.padEnd(maxLen - temp.length);
+    temp += wrapAndIndent(
+      (description ? description : '') +
+        (defaultV ? ` (default: ${defaultV})` : ''),
+    );
+    fmt(groupName!, temp);
   }
 
   if (args && Object.keys(args).length) {
@@ -309,12 +317,12 @@ function showHelp(bin: string, command: Command, version?: string) {
       if (description) {
         temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);
       }
-      fmt('Args', temp);
+      fmt('Arguments', temp);
     }
   }
 
   for (const key in out) {
-    console.log('\n  ' + key + out[key]);
+    console.log('\n  ' + key.toLocaleUpperCase() + out[key]);
   }
   if (epilog) console.log(epilog);
 }
