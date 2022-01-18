@@ -22,7 +22,7 @@ const komandoOptions = {
       flags: groupBy('SUBFLAGS', {
         subFlagA: { typeFn: String },
         subFlagB: { typeFn: String },
-        subFlagc: { typeFn: String },
+        subFlagc: { typeFn: [String] },
       }),
     }),
   ],
@@ -30,7 +30,9 @@ const komandoOptions = {
     parent: {
       typeFn: String,
       short: 'p',
+      description: 'some dir',
       placeholder: 'dir',
+      defaultV: 'dist',
     },
     flagA: { typeFn: String },
   },

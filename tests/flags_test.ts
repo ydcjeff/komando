@@ -49,10 +49,12 @@ test('root long flags', () => {
     flags: {
       flagA: { typeFn: String },
       flagB: { typeFn: Number },
+      flagC: { typeFn: Number },
     },
     run(_, flags) {
       assertEquals(flags.flagA, 'abc');
       assertEquals(flags.flagB, 123);
+      assertEquals(flags.flagC, undefined);
     },
   }, ['--flagA', 'abc', '--flagB', '123']);
 });
@@ -87,9 +89,6 @@ test('sub command long flags', () => {
         },
       }),
     ],
-    run() {
-      assert(false, 'sub command run should be called, not this run');
-    },
   }, ['test', '--flagA', 'abc', '--flagB', '123']);
 });
 
@@ -109,9 +108,6 @@ test('sub command short flags', () => {
         },
       }),
     ],
-    run() {
-      assert(false, 'sub command run should be called, not this run');
-    },
   }, ['test', '-A', 'abc', '-B', '123']);
 });
 
@@ -127,12 +123,6 @@ test('sub sub command after flags', () => {
         commands: [
           defineCommand({
             name: 'sub2',
-            run() {
-              assert(
-                false,
-                'parent command run should be called, not this run',
-              );
-            },
           }),
         ],
         run(_, flags) {
@@ -140,9 +130,6 @@ test('sub sub command after flags', () => {
         },
       }),
     ],
-    run() {
-      assert(false, 'sub command run should be called, not this run');
-    },
   }, ['sub1', '--flagA', 'sub2']);
 });
 
@@ -184,4 +171,14 @@ test('flags multiple args', () => {
       assertEquals(flags.zeroOrOne, [1, 2]);
     },
   }, ['--zero-or-one', '1,2']);
+});
+
+test('no kebab case + no short flag', () => {
+  komando({
+    name,
+    flags: { open: { typeFn: Boolean } },
+    run(_, flags) {
+      assert(flags.open);
+    },
+  }, ['--open']);
 });

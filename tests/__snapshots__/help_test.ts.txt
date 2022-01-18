@@ -9,7 +9,7 @@ export const root_cmd_help = `
     sub1, s1                sub1 cmd desc
 
   Flags
-    -p, --parent <dir>
+    -p, --parent <dir>      some dir (default: dist)
         --flag-a <flagA>
     -h, --help              Show this message
     -V, --version           Show version info
@@ -38,11 +38,11 @@ export const sub_one_cmd_help = `
   SUBFLAGS
         --sub-flag-a <subFlagA>
         --sub-flag-b <subFlagB>
-        --sub-flagc <subFlagc>
+        --sub-flagc <subFlagc>...
 
   Inherited Flags
-    -h, --help                     Show this message
-    -V, --version                  Show version info`;
+    -h, --help                       Show this message
+    -V, --version                    Show version info`;
 
 export const minimal_cmd_help_only_flags = `
   Usage
