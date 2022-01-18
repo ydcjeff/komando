@@ -6,7 +6,7 @@ export type CommandOptions<F extends Flags, A extends Args> = {
   description?: string;
   example?: string;
   /** only used in sub-commands */
-  aliases?: string[];
+  alias?: string;
   commands?: Command[];
   flags?: F;
   args?: A;
@@ -24,23 +24,23 @@ export type Command<
   A extends Args = Record<never, never>,
 > = CommandOptions<F, A>;
 
-export type RunFunction<F extends Flags, A extends Args> = (
+type RunFunction<F extends Flags, A extends Args> = (
   args: ParseArgs<A>,
   flags: ParseFlags<F>,
 ) => void | Promise<void>;
 
-export type FlagDefault<DefaultType = unknown> = {
+type FlagDefault<DefaultType = unknown> = {
   defaultV?: DefaultType;
 };
 
-export type FlagTypeFn<TF = TypeFunction | TypeFunctionArray> = {
+type FlagTypeFn<TF = TypeFunction | TypeFunctionArray> = {
   typeFn: TF;
 };
 
 // deno-lint-ignore no-explicit-any
-export type TypeFunction<ReturnType = unknown> = (value: any) => ReturnType;
+type TypeFunction<ReturnType = unknown> = (value: any) => ReturnType;
 
-export type TypeFunctionArray<ReturnType = unknown> = readonly [
+type TypeFunctionArray<ReturnType = unknown> = readonly [
   TypeFunction<ReturnType>,
 ];
 
@@ -55,7 +55,7 @@ type InferFlag<F extends Flag> = F extends
     ? F extends FlagDefault<infer D> ? T | D : T | undefined
   : never;
 
-export type Flag = FlagTypeFn & FlagDefault & {
+type Flag = FlagTypeFn & FlagDefault & {
   description?: string;
   /** short flag, it has to be a single character */
   short?: string;
@@ -74,7 +74,7 @@ export type ParseArgs<A extends Args> =
   }
   & { '--': string[] };
 
-export type Arg = {
+type Arg = {
   /**
    * Number of values this argument/flag requires.
    *
