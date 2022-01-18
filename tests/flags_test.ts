@@ -198,3 +198,23 @@ test('kebab case short flags', () => {
     },
   }, ['-C']);
 });
+
+test('flags multiple args undefined', () => {
+  komando({
+    name,
+    flags: { zeroOrOne: { typeFn: [String] } },
+    run(_, flags) {
+      assertEquals(flags.zeroOrOne, undefined);
+    },
+  }, []);
+});
+
+test('flags multiple args', () => {
+  komando({
+    name,
+    flags: { zeroOrOne: { typeFn: [Number] } },
+    run(_, flags) {
+      assertEquals(flags.zeroOrOne, [1, 2]);
+    },
+  }, ['--zero-or-one', '1,2']);
+});

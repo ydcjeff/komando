@@ -1,200 +1,5 @@
 import { parse } from './deps.ts';
-
-type CommandOptions<F extends Flags, A extends Args> = {
-  /**
-   * The name of the command.
-   *
-   * @example 'komando'
-   */
-  name: string;
-  /**
-   * Version number of this CLI app.
-   *
-   * @default undefined
-   * @example 'v1.0.0'
-   */
-  version?: string;
-  /**
-   * Command usage.
-   *
-   * @default undefined
-   * @example '$ komando [command] [flags]'
-   */
-  usage?: string;
-  /**
-   * Command description.
-   *
-   * @default undefined
-   * @example 'Type safe CLI devtool for Deno and Node'
-   */
-  description?: string;
-  /**
-   * Examples of command usages.
-   * For multiple examples, pass the value as string template.
-   *
-   * @default undefined
-   */
-  example?: string;
-  /**
-   * Command aliases.
-   *
-   * _**NOTE: This is only used in subcommands.
-   * Root command should not have defined `aliases`.**_
-   *
-   * @default undefined
-   * @example ['i', 'add']
-   */
-  aliases?: string[];
-  /**
-   * Sub-commands of this command.
-   *
-   * @default undefined
-   */
-  commands?: Command[];
-  /**
-   * Flags for this command.
-   *
-   * @default undefined
-   */
-  flags?: F;
-  /**
-   * Positional arguments for this command.
-   *
-   * @default undefined
-   */
-  args?: A;
-  /**
-   * Put this command under this group name in the help message.
-   *
-   * @default 'Commands'
-   * @example 'Core Commands'
-   */
-  groupName?: string;
-  /**
-   * Extra message to print at the end of the help message.
-   *
-   * @default undefined
-   */
-  epilog?: string;
-  /**
-   * Function to run when this command is found in `Deno.args` or
-   * `process.argv.slice(2)`. When the respective `run` function is undefined,
-   * help message will be shown instead.
-   *
-   * @default undefined
-   */
-  run?: RunFunction<F, A>;
-  /**
-   * Function for showing version info. This function can be used to show
-   * other related version info.
-   *
-   * @default console.log(`${name}@${version}`)
-   */
-  showVersion?: (name: string, version: string) => void;
-};
-
-type Command<
-  F extends Flags = Record<never, never>,
-  A extends Args = Record<never, never>,
-> = CommandOptions<F, A>;
-
-type RunFunction<F extends Flags, A extends Args> = (
-  args: ParseArgs<A>,
-  flags: ParseFlags<F>,
-) => void | Promise<void>;
-
-type FlagDefault<DefaultType = unknown> = {
-  defaultV?: DefaultType;
-};
-
-type FlagTypeFn<TF = TypeFunction> = {
-  typeFn: TF;
-};
-
-// deno-lint-ignore no-explicit-any
-type TypeFunction<ReturnType = unknown> = (value: any) => ReturnType;
-
-type ParseFlags<F extends Flags> = {
-  [K in keyof F]: InferFlag<F[K]>;
-};
-
-type InferFlag<F extends Flag> = F extends FlagTypeFn<TypeFunction<infer T>>
-  ? F extends FlagDefault<infer D> ? T | D : T | undefined
-  : never;
-
-type Flag = FlagTypeFn & FlagDefault & Arg & {
-  /**
-   * Short flag.
-   *
-   * _**NOTE: Unlike command aliases, short flag has to be a single character.**_
-   *
-   * @default undefined
-   * @example '-c'
-   */
-  short?: string;
-  /**
-   * Default value of this flag.
-   *
-   * @default undefined
-   * @example 'deno.jsonc'
-   */
-  defaultV?: unknown;
-  /**
-   * The placeholder to appear in the help message.
-   * It defaults to the long flag name.
-   *
-   * @default <long-flag-name>
-   * @example 'config-file'
-   */
-  placeholder?: string;
-  /**
-   * Put this flag under this group name in the help message. If `deepPass` is
-   * true, this flag will be shown under `Inherited Flags` in sub-commands' help
-   * and it cannot be changed.
-   *
-   * @default 'Flags'
-   * @example 'Runtime Flags'
-   */
-  groupName?: string;
-};
-
-type Flags = {
-  [long: string]: Flag;
-};
-
-type ParseArgs<A extends Args> = {
-  [K in keyof A]: Arg;
-};
-
-type Arg = {
-  /**
-   * Number of values this argument/flag requires.
-   *
-   * `?`, `*`, `+` works same as in JavaScript Regex meaning.
-   *
-   * - `?` requires zero or one value, output will be undefined or a single value.
-   * - `*` requires zero or more values, output will be an empty array or an
-   * array with many values.
-   * - `+` requires one or more values, output will be an array with a single
-   * value or an array with many values.
-   * - If `1`, output will be a single value.
-   * - If other specific number, output will be an array with that number of
-   * values.
-   *
-   * @default 1
-   */
-  nargs?: number | '?' | '*' | '+';
-  /**
-   * Argument/Flag description.
-   *
-   * @default undefined
-   */
-  description?: string;
-};
-
-type Args = {
-  [long: string]: Arg;
-};
+import { Args, Command, CommandOptions, Flags, ParseFlags } from './types.ts';
 
 /**
  * Komando main function to define a CLI app.
@@ -327,9 +132,16 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
 
   const parsedFlags: ParseFlags<typeof flags> = {};
   for (const iflag in inputFlags) {
-    const val = inputFlags[iflag];
     if (iflag in flags!) {
-      parsedFlags[iflag] = val ? flags[iflag].typeFn(val) : val;
+      const val = inputFlags[iflag];
+      const { typeFn } = flags[iflag];
+      if (Array.isArray(typeFn)) {
+        // @ts-expect-error any is not assignable to type never
+        parsedFlags[iflag] = val ? val.split(',').map(typeFn[0]) : val;
+      } else {
+        // @ts-expect-error any is not assignable to type never
+        parsedFlags[iflag] = val ? typeFn(val) : val;
+      }
     }
   }
 
@@ -463,10 +275,12 @@ function showHelp(bin: string, command: Command, version?: string) {
 
   if (flags) {
     for (const flag in flags) {
-      const { description, defaultV, placeholder, short, groupName } =
+      const { description, defaultV, placeholder, short, groupName, typeFn } =
         flags[flag];
       let temp = (short ? `-${short},` : '   ') + ` --${toKebabCase(flag)}`;
-      if (placeholder) temp += ` <${placeholder}>`;
+      if (placeholder) {
+        temp += ' ' + formatNargs(Array.isArray(typeFn) ? '+' : 1, placeholder);
+      }
       if (description || defaultV) temp += ' '.padEnd(maxLen - temp.length);
       temp += wrapAndIndent(
         (description ? description : '') +
@@ -479,15 +293,7 @@ function showHelp(bin: string, command: Command, version?: string) {
   if (args && Object.keys(args).length) {
     for (const arg in args) {
       const { description, nargs } = args[arg];
-      let temp = nargs === '?'
-        ? `[${arg}]`
-        : nargs === '*'
-        ? `[${arg}...]`
-        : nargs === '+'
-        ? `<${arg}...>`
-        : typeof nargs === 'number'
-        ? '<' + `${arg}` + `,${arg}`.repeat(nargs - 1) + '>'
-        : arg;
+      let temp = formatNargs(nargs!, arg);
       if (description) {
         temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);
       }
@@ -499,4 +305,16 @@ function showHelp(bin: string, command: Command, version?: string) {
     console.log('\n  ' + key + out[key]);
   }
   if (epilog) console.log(epilog);
+}
+
+function formatNargs(nargs: number | '?' | '*' | '+', placeholder: string) {
+  return nargs === '?'
+    ? `[${placeholder}]`
+    : nargs === '*'
+    ? `[${placeholder}...]`
+    : nargs === '+'
+    ? `<${placeholder}>...`
+    : typeof nargs === 'number'
+    ? '<' + placeholder + `,${placeholder}`.repeat(nargs - 1) + '>'
+    : placeholder;
 }

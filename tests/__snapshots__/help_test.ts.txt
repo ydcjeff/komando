@@ -17,7 +17,7 @@ export const root_cmd_help = `
   Args
     [argA]                  argA desc
     [argB...]               argB desc
-    <argC...>               argC desc
+    <argC>...               argC desc
     <argD>                  argD desc
     <argE,argE>             argE desc`;
 
