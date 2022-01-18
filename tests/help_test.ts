@@ -48,7 +48,7 @@ const komandoOptions = {
       description: 'argC desc',
     },
     argD: {
-      nargs: 1,
+      nargs: '1',
       description: 'argD desc',
     },
   },

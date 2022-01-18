@@ -55,7 +55,7 @@ export function defineCommand<F extends Flags, A extends Args>(
   }
 
   for (const val of Object.values(resolved.args)) {
-    if (!val.nargs) val.nargs = 1;
+    if (!val.nargs) val.nargs = '1';
   }
 
   return resolved as Command;
@@ -172,8 +172,8 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
       // @ts-expect-error any is not assignable to type never
       parsedArgs[arg] = [...inputArgs];
       break;
-    } else if (nargs === 1) {
-      if (inputArgs.length < nargs) {
+    } else if (nargs === '1') {
+      if (inputArgs.length < +nargs) {
         throw new Error(`Argument ${arg} expected ${nargs} argument(s).`);
       }
       // @ts-expect-error any is not assignable to type never
@@ -290,7 +290,8 @@ function showHelp(bin: string, command: Command, version?: string) {
         flags[flag];
       let temp = (short ? `-${short},` : '   ') + ` --${toKebabCase(flag)}`;
       if (placeholder) {
-        temp += ' ' + formatNargs(Array.isArray(typeFn) ? '+' : 1, placeholder);
+        temp += ' ' +
+          formatNargs(Array.isArray(typeFn) ? '+' : '1', placeholder);
       }
       if (description || defaultV) temp += ' '.padEnd(maxLen - temp.length);
       temp += wrapAndIndent(
@@ -318,14 +319,14 @@ function showHelp(bin: string, command: Command, version?: string) {
   if (epilog) console.log(epilog);
 }
 
-function formatNargs(nargs: 1 | '?' | '*' | '+', placeholder: string) {
+function formatNargs(nargs: '1' | '?' | '*' | '+', placeholder: string) {
   return nargs === '?'
     ? `[${placeholder}]`
     : nargs === '*'
     ? `[${placeholder}...]`
     : nargs === '+'
     ? `<${placeholder}>...`
-    : nargs === 1
+    : nargs === '1'
     ? `<${placeholder}>`
     : placeholder;
 }

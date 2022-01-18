@@ -87,9 +87,9 @@ export type Arg = {
    * value or an array with many values.
    * - If `1`, output will be a single value.
    *
-   * @default 1
+   * @default '1'
    */
-  nargs?: 1 | '?' | '*' | '+';
+  nargs?: '1' | '?' | '*' | '+';
   description?: string;
 };
 
@@ -100,5 +100,5 @@ export type Args = {
 type InferArg<A extends Arg> = A extends { nargs: '?' } ? string | undefined
   : A extends { nargs: '*' } ? string[] | undefined
   : A extends { nargs: '+' } ? string[]
-  : A extends { nargs: 1 } ? string
+  : A extends { nargs: '1' } ? string
   : never;

@@ -183,7 +183,7 @@ test('1 nargs with', async (tc) => {
               nargs: '?',
             },
             argB: {
-              nargs: 1,
+              nargs: '1',
             },
           },
           run() {},
@@ -198,10 +198,10 @@ test('1 nargs with', async (tc) => {
         name,
         args: {
           argA: {
-            nargs: 1,
+            nargs: '1',
           },
           argB: {
-            nargs: 1,
+            nargs: '1',
           },
         },
         run(args) {
