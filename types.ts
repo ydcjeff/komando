@@ -68,9 +68,11 @@ export type Flags = {
   [long: string]: Flag;
 };
 
-export type ParseArgs<A extends Args> = {
-  [K in keyof A]: Arg;
-};
+export type ParseArgs<A extends Args> =
+  & {
+    [K in keyof A]: InferArg<A[K]>;
+  }
+  & { '--': string[] };
 
 export type Arg = {
   /**
@@ -87,10 +89,16 @@ export type Arg = {
    *
    * @default 1
    */
-  nargs?: number | '?' | '*' | '+';
+  nargs?: 1 | '?' | '*' | '+';
   description?: string;
 };
 
 export type Args = {
   [long: string]: Arg;
 };
+
+type InferArg<A extends Arg> = A extends { nargs: '?' } ? string | undefined
+  : A extends { nargs: '*' } ? string[] | undefined
+  : A extends { nargs: '+' } ? string[]
+  : A extends { nargs: 1 } ? string
+  : never;

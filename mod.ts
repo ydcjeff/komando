@@ -1,5 +1,12 @@
 import { parse } from './deps.ts';
-import { Args, Command, CommandOptions, Flags, ParseFlags } from './types.ts';
+import {
+  Args,
+  Command,
+  CommandOptions,
+  Flags,
+  ParseArgs,
+  ParseFlags,
+} from './types.ts';
 
 /**
  * Komando main function to define a CLI app.
@@ -104,7 +111,8 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
   const args = currentCommand.args as Args;
   const run = currentCommand.run;
 
-  const { _: inputArgs, ...inputFlags } = parse(argv, {
+  const { _: inputArgs, '--': inputDoubleDash, ...inputFlags } = parse(argv, {
+    '--': true,
     alias: Object.fromEntries(
       Object.entries(flags).map((
         [k, v],
@@ -145,28 +153,31 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
     }
   }
 
-  const parsedArgs: Record<string, unknown> = {};
+  // @ts-expect-error any is not assignable to type never
+  const parsedArgs: ParseArgs<typeof args> = { '--': inputDoubleDash };
   for (const arg in args) {
     const nargs = args[arg].nargs;
 
     if (nargs === '?') {
+      // @ts-expect-error any is not assignable to type never
       parsedArgs[arg] = inputArgs.shift();
     } else if (nargs === '*') {
+      // @ts-expect-error any is not assignable to type never
       parsedArgs[arg] = [...inputArgs];
       break;
     } else if (nargs === '+') {
       if (inputArgs.length < 1) {
         throw new Error(`Argument ${arg} expected at least one argument`);
       }
+      // @ts-expect-error any is not assignable to type never
       parsedArgs[arg] = [...inputArgs];
       break;
-    } else if (typeof nargs === 'number') {
+    } else if (nargs === 1) {
       if (inputArgs.length < nargs) {
         throw new Error(`Argument ${arg} expected ${nargs} argument(s).`);
       }
-      parsedArgs[arg] = nargs === 1
-        ? inputArgs.shift()
-        : inputArgs.splice(0, nargs);
+      // @ts-expect-error any is not assignable to type never
+      parsedArgs[arg] = inputArgs.shift();
     }
   }
 
@@ -307,14 +318,14 @@ function showHelp(bin: string, command: Command, version?: string) {
   if (epilog) console.log(epilog);
 }
 
-function formatNargs(nargs: number | '?' | '*' | '+', placeholder: string) {
+function formatNargs(nargs: 1 | '?' | '*' | '+', placeholder: string) {
   return nargs === '?'
     ? `[${placeholder}]`
     : nargs === '*'
     ? `[${placeholder}...]`
     : nargs === '+'
     ? `<${placeholder}>...`
-    : typeof nargs === 'number'
-    ? '<' + placeholder + `,${placeholder}`.repeat(nargs - 1) + '>'
+    : nargs === 1
+    ? `<${placeholder}>`
     : placeholder;
 }
