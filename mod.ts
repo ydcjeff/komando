@@ -46,7 +46,7 @@ export function defineCommand<F extends Flags, A extends Args>(
       resolved.commands.length
   ) {
     throw new Error(
-      `Duplicate subcommand found in: ${resolved.name} command.`,
+      `Duplicate subcommand found in: "${resolved.name}" command.`,
     );
   }
 
@@ -54,7 +54,7 @@ export function defineCommand<F extends Flags, A extends Args>(
   if (alias) {
     if (new Set(alias).size !== alias.length) {
       throw new Error(
-        `Duplicate alias found in: ${resolved.name} command.`,
+        `Duplicate alias found in: "${resolved.name}" command.`,
       );
     }
   }
@@ -106,21 +106,23 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
 
   argv = [...argv]; // Deno.args is read only, copy it
 
-  // filter out the matched commands
-  let hasSubCommands = false;
-  do {
-    // reset here
-    hasSubCommands = false;
-    for (const cmd of currentCommand.commands!) {
-      const val = argv[0];
-      if (cmd.name === val || cmd.alias === val) {
-        currentCommand = cmd;
-        argv.shift();
-        hasSubCommands = !!cmd.commands;
-        break;
+  if (argv.length) {
+    // filter out the matched commands
+    let hasSubCommands = false;
+    do {
+      // reset here
+      hasSubCommands = false;
+      for (const cmd of currentCommand.commands!) {
+        const val = argv[0];
+        if (cmd.name === val || cmd.alias === val) {
+          currentCommand = cmd;
+          argv.shift();
+          hasSubCommands = !!cmd.commands;
+          break;
+        }
       }
-    }
-  } while (hasSubCommands);
+    } while (hasSubCommands);
+  }
 
   if (argv.includes('-h') || argv.includes('--help')) {
     showHelp(name, currentCommand, version);
@@ -192,7 +194,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
     const nargs = args[arg].nargs;
 
     if (nargs === '1' && inputArgs.length < +nargs) {
-      throw new Error(`Argument ${arg} expected 1 argument.`);
+      throw new Error(`Argument "${arg}" expected 1 argument.`);
     }
 
     if (nargs === '?' || nargs === '1') {
@@ -204,7 +206,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
       break;
     } else if (nargs === '+') {
       if (inputArgs.length < 1) {
-        throw new Error(`Argument ${arg} expected at least one argument`);
+        throw new Error(`Argument "${arg}" expected at least one argument`);
       }
       // @ts-expect-error any is not assignable to type never
       parsedArgs[arg] = [...inputArgs];
