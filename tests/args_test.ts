@@ -211,3 +211,15 @@ test('1 nargs with', async (tc) => {
       }, ['abc', 'def', 'ghi']);
     });
 });
+
+test('args double dash', () => {
+  komando({
+    name,
+    flags: { open: { typeFn: Boolean } },
+    args: { argA: { nargs: '?' } },
+    run(args) {
+      assertEquals(args.argA, 'root');
+      assertEquals(args['--'], ['path', '--close', '-a']);
+    },
+  }, ['--open', 'root', '--', 'path', '--close', '-a']);
+});

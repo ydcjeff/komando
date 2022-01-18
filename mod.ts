@@ -140,9 +140,14 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
   const { _: inputArgs, '--': inputDoubleDash, ...inputFlags } = parse(argv, {
     '--': true,
     alias: Object.fromEntries(
-      Object.entries(flags).map((
-        [k, v],
-      ) => [k, [camelCaseRE.test(k) ? toKebabCase(k) : '', v.short ?? '']]),
+      Object.entries(flags).map(([k, v]) => {
+        return [
+          k,
+          [camelCaseRE.test(k) ? toKebabCase(k) : '', v.short ?? ''].filter(
+            (v) => v,
+          ),
+        ];
+      }),
     ),
     boolean: Object.entries(flags).filter(([_, v]) => {
       const typeFn = Array.isArray(v.typeFn) ? v.typeFn[0] : v.typeFn;
