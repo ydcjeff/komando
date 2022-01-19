@@ -36,7 +36,7 @@ if (status.success) {
   // create package.json
   const pkgJSON = {
     name: 'komando',
-    version: Deno.env.get('GITHUB_REF')?.replace('v', '') || '0.0.0',
+    version: Deno.env.get('GITHUB_REF_NAME')?.replace('v', '') || '0.0.0',
     type: 'module',
     types: './dist/mod.d.ts',
     exports: './dist/index.js',
