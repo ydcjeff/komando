@@ -178,6 +178,16 @@ komando({
   function. It takes a title and an array of commands or a flags object to
   group.
 
+## Acknowledgement
+
+Komando is inspired by the below prior type safe tools:
+
+- [cleye](https://github.com/privatenumber/cleye)
+- [cmd-ts](https://github.com/Schniz/cmd-ts)
+
+As first, Komando is intended for Deno only. But there is no Deno only specific
+features that Komando depends on, so npm package is also published.
+
 ## Contribution
 
 - Install [Deno](https://deno.land/manual/getting_started/installation).
