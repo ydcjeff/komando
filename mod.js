@@ -220,7 +220,9 @@ function toKebabCase(str) {
 function showHelp(bin, command, version) {
   /** @type {Record<string, string | string[]>} */
   const out = {};
-  const { columns } = Deno.consoleSize(Deno.stdout.rid);
+  const columns = Deno.env.get('CI')
+    ? 80
+    : Deno.consoleSize(Deno.stdout.rid).columns;
   const {
     description,
     example,
