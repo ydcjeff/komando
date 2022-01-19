@@ -24,7 +24,7 @@ Jump to
 
 For Deno:
 
-```sh
+```js
 // @deno-types="https://deno.land/x/komando/mod.d.ts"
 import { komando } from 'https://deno.land/x/komando/mod.js';
 ```
