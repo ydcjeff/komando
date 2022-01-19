@@ -37,9 +37,9 @@ jobs:
         with:
           deno-version: vx.x.x
 
-    - uses: pnpm/action-setup@v2
-      with:
-        version: latest
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
 
       - uses: actions/setup-node@v2
         with:
