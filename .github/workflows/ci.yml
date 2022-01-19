@@ -8,8 +8,6 @@ on:
 jobs:
   deno:
     runs-on: ${{ matrix.os }}
-    env:
-      CI: true
     strategy:
       fail-fast: false
       matrix:
@@ -23,7 +21,7 @@ jobs:
 
       - run: deno fmt --check -c deno.jsonc
       - run: deno lint -c deno.jsonc
-      - run: deno test --unstable --allow-read --coverage=./cov tests
+      - run: deno test --unstable --allow-read --coverage=./cov
       - run: deno coverage ./cov
 
   node:

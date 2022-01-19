@@ -19,7 +19,7 @@ if (status.success) {
   code = code.replace(/Deno\.exit\(1\)/g, 'process.exit(1)');
   code = code.replace(/Deno\.args/g, 'process.argv.slice(2)');
   code = code.replace(
-    /const columns = Deno\.env\.get\(\'CI\'\) ? 80 : Deno.consoleSize\(Deno\.stdout\.rid\)\.columns/g,
+    /const {\s* columns\s* } = Deno\.consoleSize\(Deno\.stdout\.rid\)/g,
     'const columns = process.stdout.columns',
   );
   const encoder = new TextEncoder();
