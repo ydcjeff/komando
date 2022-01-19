@@ -2,6 +2,8 @@
 // [Bat](https://github.com/sharkdp/bat) created with Komando
 
 import { defineCommand, komando } from '../mod.js';
+// import { defineCommand, komando } from 'https://deno.land/x/komando/mod.js'; // with deno, uncomment this
+// import { defineCommand, komando } from 'komando'; // with node, uncomment this
 
 komando({
   name: 'bat',
