@@ -26,8 +26,6 @@ jobs:
 
   node:
     runs-on: ${{ matrix.os }}
-    env:
-      KOMANDO_VERSION: ${{ GITHUB_REF }}
     strategy:
       fail-fast: false
       matrix:
