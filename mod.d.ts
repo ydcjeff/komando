@@ -58,7 +58,7 @@ export type Command<
   A extends Args = Record<never, never>,
 > = CommandOptions<F, A>;
 
-type RunFunction<F extends Flags, A extends Args> = (
+export type RunFunction<F extends Flags, A extends Args> = (
   args: ParseArgs<A>,
   flags: ParseFlags<F>,
 ) => void | Promise<void>;
@@ -89,7 +89,7 @@ type InferFlag<F extends Flag> = F extends
     ? F extends FlagDefault<infer D> ? T | D : T | undefined
   : never;
 
-type Flag = FlagTypeFn & FlagDefault & {
+export type Flag = FlagTypeFn & FlagDefault & {
   /**
    * Flag description.
    */
@@ -118,7 +118,7 @@ export type ParseArgs<A extends Args> =
   }
   & { '--': string[] };
 
-type Arg = {
+export type Arg = {
   /**
    * Number of values this argument/flag requires.
    *

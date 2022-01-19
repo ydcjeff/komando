@@ -25,6 +25,7 @@ Jump to
 For Deno:
 
 ```sh
+// @deno-types="https://deno.land/x/komando/mod.d.ts"
 import { komando } from 'https://deno.land/x/komando/mod.js';
 ```
 
@@ -35,6 +36,9 @@ pnpm add komando -D
 ```
 
 ## Usage
+
+- [`komando` function on Deno Doc](https://doc.deno.land/https://deno.land/x/komando/mod.js/~/komando)
+- [`CommandOptions` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando/mod.js/~/CommandOptions)
 
 The main entry of this module is `komando` function. `komando` function creates
 the CLI app and parse `Deno.args` for Deno or `process.argv.slice(2)` for Node
@@ -50,6 +54,9 @@ komando({
 ```
 
 ### Sub-commands
+
+- [`defineCommand` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando/mod.js/~/defineCommand)
+- [`CommandOptions` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando/mod.js/~/CommandOptions)
 
 Sub-commands can be created with `defineCommand` helper function. It provides
 type inference and set the default values if there isn't. And put the command in
@@ -72,6 +79,9 @@ komando({
 ```
 
 ### Flags
+
+- [`Flags` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando/mod.js/~/Flags)
+- [`Flag` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando/mod.js/~/Flag)
 
 Flags (aka Options) are simple JavaScript objects and they can be created in the
 `flags` property of command options.
@@ -114,6 +124,9 @@ komando({
 
 ### Arguments
 
+- [`Args` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando/mod.js/~/Args)
+- [`Arg` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando/mod.js/~/Arg)
+
 Arguments are also simple objects and can be created in `args` property of
 command options. Arguments after `--` are collected in the `--` property of
 `args`.
@@ -134,6 +147,8 @@ komando({
 
 ### Run function
 
+- [`run` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando@/mod.js/~/RunFunction)
+
 Each command has an optional `run` function to run when the command is
 encountered in the `argv`.
 
@@ -152,6 +167,16 @@ komando({
   },
 });
 ```
+
+### Misc
+
+- [`groupBy` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando@v0.0.5/mod.js/~/groupBy)
+
+  Commands or flags can be grouped under custom title in the help message. This
+  is done by
+  [`groupBy`](https://doc.deno.land/https://deno.land/x/komando@v0.0.5/mod.js/~/groupBy)
+  function. It takes a title and an array of commands or a flags object to
+  group.
 
 ## Contribution
 
