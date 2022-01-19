@@ -21,7 +21,7 @@ jobs:
 
       - run: deno fmt --check -c deno.jsonc
       - run: deno lint -c deno.jsonc
-      - run: deno test --unstable --allow-read --coverage=./cov
+      - run: deno test --unstable --coverage=./cov --ignore=tests/help_test.ts
       - run: deno coverage ./cov
 
   node:
