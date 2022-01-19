@@ -1,5 +1,5 @@
+import { komando } from '../mod.js';
 import { assertEquals, assertThrows } from '../deps_test.ts';
-import { komando } from '../mod.ts';
 
 const { test } = Deno;
 const name = import.meta.url;

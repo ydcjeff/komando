@@ -1,5 +1,5 @@
+import { defineCommand, groupBy, komando } from '../mod.js';
 import { assert, restoreAll, setupSnapshot, spyOn } from '../deps_test.ts';
-import { defineCommand, groupBy, komando } from '../mod.ts';
 
 const { test } = Deno;
 const assertSnapshot = await setupSnapshot(import.meta.url);
@@ -9,6 +9,10 @@ const komandoOptions = {
   version: 'v1.0.0',
   usage: 'Root command usage',
   description: 'Root command desc',
+  example: `root sub1 --parent
+    root s1 subsub1
+    root deno.json -p deps`,
+  epilog: '  EPILOG TEXT\n    This section is useful for more info.',
   commands: [
     defineCommand({
       name: 'sub1',

@@ -1,21 +1,55 @@
 export type CommandOptions<F extends Flags, A extends Args> = {
+  /**
+   * Name of this command.
+   */
   name: string;
-  /** only used in root command */
+  /**
+   * Version of this CLI app. Only used in root command.
+   */
   version?: string;
+  /**
+   * Command usage.
+   */
   usage?: string;
+  /**
+   * Command description.
+   */
   description?: string;
+  /**
+   * Command examples.
+   */
   example?: string;
-  /** only used in sub-commands */
+  /**
+   * Command alias. Only used in sub-commands.
+   */
   alias?: string;
+  /**
+   * Sub-commands.
+   */
   commands?: Command[];
+  /**
+   * Flags of this command.
+   */
   flags?: F;
+  /**
+   * Arguments of this command.
+   */
   args?: A;
-  /** put this command under this group name in help message */
+  /**
+   * Put this command under this group name in help message
+   */
   groupName?: string;
-  /** extra message to print at the end of help message */
+  /**
+   * Extra message to print at the end of help message
+   */
   epilog?: string;
-  /** function to run for this command */
+  /**
+   * Function to run for this command
+   */
   run?: RunFunction<F, A>;
+  /**
+   * Funtion to show version. Can be used to show custom version info.
+   */
   showVersion?: (name: string, version: string) => void;
 };
 
@@ -56,11 +90,21 @@ type InferFlag<F extends Flag> = F extends
   : never;
 
 type Flag = FlagTypeFn & FlagDefault & {
+  /**
+   * Flag description.
+   */
   description?: string;
-  /** short flag, it has to be a single character */
+  /**
+   * Short flag, it has to be a single character
+   */
   short?: string;
+  /**
+   * Placeholder name for this flag. If undefined, it will use long flag name.
+   */
   placeholder?: string;
-  /** put this flag under this group name in help message */
+  /**
+   * Put this flag under this group name in help message
+   */
   groupName?: string;
 };
 
@@ -90,6 +134,9 @@ type Arg = {
    * @default '1'
    */
   nargs?: '1' | '?' | '*' | '+';
+  /**
+   * Argument description.
+   */
   description?: string;
 };
 
@@ -102,3 +149,34 @@ type InferArg<A extends Arg> = A extends { nargs: '?' } ? string | undefined
   : A extends { nargs: '+' } ? string[]
   : A extends { nargs: '1' } ? string
   : never;
+
+/**
+ * Komando main function to define a CLI app.
+ *
+ * @param options Root commands options to define
+ * @param argv Argument values from Deno or Node
+ */
+export declare function komando<F extends Flags, A extends Args>(
+  options: CommandOptions<F, A>,
+  argv?: string[],
+): void;
+/**
+ * A function to create a sub-command.
+ *
+ * @param options Sub-command options to define
+ * @returns The sub-command with required properties defined
+ */
+export declare function defineCommand<F extends Flags, A extends Args>(
+  options: CommandOptions<F, A>,
+): Command;
+/**
+ * Helper function that set `groupName` property of Array of `Command` or `Flags`
+ * if `groupName` is undefined.
+ *
+ * This function is used to group many commands or flags.
+ *
+ * @param name Group name
+ * @param toGroup Array of `Command` or `Flags` to group
+ * @returns Array of Commands or Flags with `groupName` defined
+ */
+export declare function groupBy<T>(name: string, toGroup: T): T;

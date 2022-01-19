@@ -1,43 +1,37 @@
+/// <reference types="./mod.d.ts" />
+
 import { parse } from './deps.ts';
-import {
-  Args,
-  Command,
-  CommandOptions,
-  Flags,
-  ParseArgs,
-  ParseFlags,
-} from './types.ts';
 
 /**
- * Komando main function to define a CLI app.
- *
- * @param options Root commands options to define
- * @param argv Argument values from Deno or Node
+ * @typedef {import('./mod.d.ts').Command} Command
+ * @typedef {import('./mod.d.ts').Flags} Flags
+ * @typedef {import('./mod.d.ts').Args} Args
  */
-export function komando<F extends Flags, A extends Args>(
-  options: CommandOptions<F, A>,
-  argv = Deno.args,
-) {
+
+/**
+ * @template F, A
+ * @param {import('./mod.d.ts').CommandOptions<F, A>} options
+ * @param {string[]} argv
+ */
+export function komando(options, argv = Deno.args) {
   const resolved = defineCommand(options);
   if (!resolved.showVersion) {
+    /** @param {string} name @param {string} version */
     resolved.showVersion = (name, version) => console.log(`${name}@${version}`);
   }
   komandoImpl(resolved, argv);
 }
 
 /**
- * A function to create a sub-command.
- *
- * @param options Sub-command options to define
- * @returns The sub-command with required properties defined
+ * @template F, A
+ * @param {import('./mod.d.ts').CommandOptions<F, A>} options
+ * @returns {Command}
  */
-export function defineCommand<F extends Flags, A extends Args>(
-  options: CommandOptions<F, A>,
-): Command {
+export function defineCommand(options) {
   const resolved = {
     commands: [],
-    flags: {} as Flags,
-    args: {} as Args,
+    flags: {},
+    args: {},
     ...options,
   };
 
@@ -77,30 +71,30 @@ export function defineCommand<F extends Flags, A extends Args>(
     if (!val.nargs) val.nargs = '1';
   }
 
-  return resolved as Command;
+  return resolved;
 }
 
 /**
- * Helper function that set `groupName` property of Array of `Command` or `Flags`
- * if `groupName` is undefined.
- *
- * This function is used to group many commands or flags.
- *
- * @param name Group name
- * @param toGroup Array of `Command` or `Flags` to group
- * @returns Array of Commands or Flags with `groupName` defined
+ * @template T
+ * @param {string} name
+ * @param {T} toGroup
+ * @returns T
  */
-export function groupBy<T>(name: string, toGroup: T) {
+export function groupBy(name, toGroup) {
   for (const val of Object.values(toGroup)) {
     if (!val.groupName) val.groupName = name;
   }
   return toGroup;
 }
 
-function komandoImpl(currentCommand: Command, argv: string[]) {
+/**
+ * @param {Command} currentCommand
+ * @param {string[]} argv
+ */
+function komandoImpl(currentCommand, argv) {
   const { name, version, showVersion } = currentCommand;
   if ((argv.includes('-V') || argv.includes('--version')) && version) {
-    showVersion!(name, version);
+    showVersion(name, version);
     return;
   }
 
@@ -112,7 +106,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
     do {
       // reset here
       hasSubCommands = false;
-      for (const cmd of currentCommand.commands!) {
+      for (const cmd of currentCommand.commands) {
         const val = argv[0];
         if (cmd.name === val || cmd.alias === val) {
           currentCommand = cmd;
@@ -134,9 +128,9 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
     Deno.exit(1);
   }
 
-  const unknowns: Record<string, unknown> = {};
-  const flags = currentCommand.flags as Flags;
-  const args = currentCommand.args as Args;
+  const unknowns = {};
+  const flags = currentCommand.flags;
+  const args = currentCommand.args;
   const run = currentCommand.run;
 
   const { _: inputArgs, '--': inputDoubleDash, ...inputFlags } = parse(argv, {
@@ -170,10 +164,9 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
   if (Object.keys(unknowns).length) {
     console.table(unknowns);
     error('Unknown flags found. See the above table.');
-    Deno.exit(1);
   }
 
-  const parsedFlags: ParseFlags<typeof flags> = {};
+  const parsedFlags = {};
   for (const iflag in inputFlags) {
     if (iflag in flags) {
       const val = inputFlags[iflag];
@@ -188,8 +181,7 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
     }
   }
 
-  // @ts-expect-error any is not assignable to type never
-  const parsedArgs: ParseArgs<typeof args> = { '--': inputDoubleDash };
+  const parsedArgs = { '--': inputDoubleDash };
   for (const arg in args) {
     const nargs = args[arg].nargs;
 
@@ -198,17 +190,14 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
     }
 
     if (nargs === '?' || nargs === '1') {
-      // @ts-expect-error any is not assignable to type never
       parsedArgs[arg] = inputArgs.shift();
     } else if (nargs === '*') {
-      // @ts-expect-error any is not assignable to type never
       parsedArgs[arg] = [...inputArgs];
       break;
     } else if (nargs === '+') {
       if (inputArgs.length < 1) {
         throw new Error(`Argument "${arg}" expected at least one argument`);
       }
-      // @ts-expect-error any is not assignable to type never
       parsedArgs[arg] = [...inputArgs];
       break;
     }
@@ -218,12 +207,19 @@ function komandoImpl(currentCommand: Command, argv: string[]) {
 }
 
 const camelCaseRE = /\B([A-Z])/g;
-function toKebabCase(str: string) {
+/** @param {string} str */
+function toKebabCase(str) {
   return str.replace(camelCaseRE, '-$1').toLowerCase();
 }
 
-function showHelp(bin: string, command: Command, version?: string) {
-  const out: Record<string, string | string[]> = {};
+/**
+ * @param {string} bin
+ * @param {Command} command
+ * @param {string=} version
+ */
+function showHelp(bin, command, version) {
+  /** @type {Record<string, string | string[]>} */
+  const out = {};
   const { columns } = Deno.consoleSize(Deno.stdout.rid);
   const {
     description,
@@ -235,8 +231,8 @@ function showHelp(bin: string, command: Command, version?: string) {
     name,
   } = command;
 
-  const flags = command.flags as Flags;
-  const args = command.args as Args;
+  const flags = command.flags;
+  const args = command.args;
 
   flags.help = {
     typeFn: Boolean,
@@ -256,8 +252,10 @@ function showHelp(bin: string, command: Command, version?: string) {
     };
   }
 
-  const indent = (str: string) => '    ' + str;
-  const fmt = (title: string, body: string) => {
+  /** @param {string} str */
+  const indent = (str) => '    ' + str;
+  /** @param {string} title @param {string} body */
+  const fmt = (title, body) => {
     if (!out[title]) out[title] = '';
     out[title] += '\n' + indent(body);
   };
@@ -295,7 +293,8 @@ function showHelp(bin: string, command: Command, version?: string) {
     `(?![^\\n]{1,${descWidth}}$)([^\\n]{1,${descWidth}})\\s`,
     'g',
   );
-  const wrapAndIndent = (str: string) =>
+  /** @param {string} str */
+  const wrapAndIndent = (str) =>
     str.replace(wrapRE, `$1\n${' '.repeat(descIndent)}`);
 
   if (commands?.length) {
@@ -305,7 +304,7 @@ function showHelp(bin: string, command: Command, version?: string) {
       if (description) {
         temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);
       }
-      fmt(groupName!, temp);
+      fmt(groupName, temp);
     }
   }
 
@@ -322,13 +321,13 @@ function showHelp(bin: string, command: Command, version?: string) {
       (description ? description : '') +
         (defaultV ? ` (default: ${defaultV})` : ''),
     );
-    fmt(groupName!, temp);
+    fmt(groupName, temp);
   }
 
   if (args && Object.keys(args).length) {
     for (const arg in args) {
       const { description, nargs } = args[arg];
-      let temp = formatNargs(nargs!, arg);
+      let temp = formatNargs(nargs, arg);
       if (description) {
         temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);
       }
@@ -339,10 +338,14 @@ function showHelp(bin: string, command: Command, version?: string) {
   for (const key in out) {
     console.log('\n  ' + key + out[key]);
   }
-  if (epilog) console.log(epilog);
+  if (epilog) console.log('\n' + epilog);
 }
 
-function formatNargs(nargs: '1' | '?' | '*' | '+', placeholder: string) {
+/**
+ * @param {'1' | '?' | '*' | '+'} nargs
+ * @param {string} placeholder
+ */
+function formatNargs(nargs, placeholder) {
   return nargs === '?'
     ? `[${placeholder}]`
     : nargs === '*'
@@ -354,7 +357,9 @@ function formatNargs(nargs: '1' | '?' | '*' | '+', placeholder: string) {
     : placeholder;
 }
 
-function error(msg: string) {
+/** @param {string} msg */
+function error(msg) {
   console.error('Error: ' + msg);
   console.error('Try --help for more info.');
+  Deno.exit(1);
 }

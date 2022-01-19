@@ -1,3 +1,10 @@
 node_modules
 cov
 TODO.md
+dist
+package.json
+package-lock.json
+pnpm-lock.yaml
+*.log
+*.lock
+.npmrc

@@ -5,6 +5,11 @@ export const root_cmd_help = `
   Usage
     Root command usage
 
+  Example
+    root sub1 --parent
+    root s1 subsub1
+    root deno.json -p deps
+
   Commands
     sub1, s1                sub1 cmd desc
 
@@ -18,7 +23,10 @@ export const root_cmd_help = `
     [argA]                  argA desc
     [argB...]               argB desc
     <argC>...               argC desc
-    <argD>                  argD desc`;
+    <argD>                  argD desc
+
+  EPILOG TEXT
+    This section is useful for more info.`;
 
 export const sub_one_cmd_help = `
   Description

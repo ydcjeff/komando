@@ -1,7 +1,7 @@
 // @ts-check
 // [Bat](https://github.com/sharkdp/bat) created with Komando
 
-import { defineCommand, komando } from '../mod.ts';
+import { defineCommand, komando } from '../mod.js';
 
 komando({
   name: 'bat',

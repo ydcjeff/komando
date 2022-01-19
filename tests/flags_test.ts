@@ -1,5 +1,5 @@
+import { defineCommand, komando } from '../mod.js';
 import { assert, assertEquals, restoreAll, spyOn } from '../deps_test.ts';
-import { defineCommand, komando } from '../mod.ts';
 
 const { test } = Deno;
 const name = import.meta.url;
