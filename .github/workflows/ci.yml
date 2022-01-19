@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  deno:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: vx.x.x
+
+      - run: deno fmt --check -c deno.jsonc
+      - run: deno lint -c deno.jsonc
+      - run: deno test --unstable --allow-read --coverage=./cov
+      - run: deno coverage ./cov
+
+  node:
+    runs-on: ${{ matrix.os }}
+    env:
+      KOMANDO_VERSION: ${{ GITHUB_REF }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: vx.x.x
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          cache: 'pnpm'
+
+      - run: deno run -A build.js
+      - run: cat package.json
+      - run: node examples/bat.js -h
+      - run: node examples/bat.js cache -h
+      - run: node examples/bat.js root -A -p -l js -H '1:100,2:200' --file-name mod.js,mod.d.ts -d --tabs 2 --wrap never -n --color always -m "*.js:JS" --theme one-dark-pro -r "1:100,2:200" -L
+      - run: node examples/bat.js cache -bc --blank --source src --target dist

@@ -40,6 +40,10 @@ komando({
             'Create completely new syntax and theme sets (instead of appending to the default sets).',
         },
       },
+      run(args, flags) {
+        console.log('Arguments: ', args);
+        console.log('Flags: ', flags);
+      },
     }),
   ],
   flags: {
