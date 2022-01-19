@@ -2,6 +2,10 @@
 
 <!-- CHLOG_SPLIT_MARKER -->
 
+## [v0.0.5](https://github.com/ydcjeff/komando/compare/v0.0.4...v0.0.5)
+
+_2022-01-19_
+
 ## [v0.0.4](https://github.com/ydcjeff/komando/compare/v0.0.3...v0.0.4)
 
 _2022-01-19_
