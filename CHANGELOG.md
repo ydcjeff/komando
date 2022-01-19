@@ -2,21 +2,17 @@
 
 <!-- CHLOG_SPLIT_MARKER -->
 
-## [v0.0.5](https://github.com/ydcjeff/komando/compare/v0.0.4...v0.0.5)
+## [v1.0.0](https://github.com/ydcjeff/komando/compare/7ae9129...v1.0.0)
 
 _2022-01-19_
 
-## [v0.0.4](https://github.com/ydcjeff/komando/compare/v0.0.3...v0.0.4)
+1.0 Release of Komando. See
+[README](https://github.com/ydcjeff/komando/blob/main/README.md) for more.
 
-_2022-01-19_
-
-## [v0.0.3](https://github.com/ydcjeff/komando/compare/v0.0.2...v0.0.3)
-
-_2022-01-19_
-
-## [v0.0.2](https://github.com/ydcjeff/komando/compare/7ae9129...v0.0.2)
-
-_2022-01-19_
+<details>
+  <summary>
+  Full changelog to 1.0
+  </summary>
 
 ### Bug Fixes
 
@@ -80,6 +76,9 @@ _2022-01-19_
 
 - [`2139c3a`](https://github.com/ydcjeff/komando/commit/2139c3a) **(help)** show
   help message if the command has no run fn
+
+- [`9b3226a`](https://github.com/ydcjeff/komando/commit/9b3226a) **(types)**
+  expose Flag, Arg, RunFunction
 
 - [`5178d35`](https://github.com/ydcjeff/komando/commit/5178d35) add
   defineCommand for types infer
@@ -149,3 +148,21 @@ _2022-01-19_
 
 - [`292a80e`](https://github.com/ydcjeff/komando/commit/292a80e) change nargs
   `1` to `'1'`
+
+</details>
+
+## [v0.0.5](https://github.com/ydcjeff/komando/compare/v0.0.4...v0.0.5)
+
+_2022-01-19_
+
+## [v0.0.4](https://github.com/ydcjeff/komando/compare/v0.0.3...v0.0.4)
+
+_2022-01-19_
+
+## [v0.0.3](https://github.com/ydcjeff/komando/compare/v0.0.2...v0.0.3)
+
+_2022-01-19_
+
+## [v0.0.2](https://github.com/ydcjeff/komando/compare/7ae9129...v0.0.2)
+
+_2022-01-19_
