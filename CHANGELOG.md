@@ -2,6 +2,15 @@
 
 <!-- CHLOG_SPLIT_MARKER -->
 
+## [v1.0.1](https://github.com/ydcjeff/komando/compare/v1.0.0...v1.0.1)
+
+_2022-02-11_
+
+### Bug Fixes
+
+- [`9da45bc`](https://github.com/ydcjeff/komando/commit/9da45bc) show full
+  command in help msg of nested commands (fix #25)
+
 ## [v1.0.0](https://github.com/ydcjeff/komando/compare/7ae9129...v1.0.0)
 
 _2022-01-19_
