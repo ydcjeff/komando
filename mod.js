@@ -326,7 +326,7 @@ function showHelp(bin, command, version) {
 
   for (const flag in flags) {
     const { description, defaultV, placeholder, short, groupName, typeFn } =
-    // @ts-expect-error flags is not undefined
+      // @ts-expect-error flags is not undefined
       flags[flag];
     let temp = (short ? `-${short},` : '   ') + ` --${toKebabCase(flag)}`;
     if (placeholder) {
