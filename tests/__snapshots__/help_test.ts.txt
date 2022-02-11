@@ -69,3 +69,10 @@ export const minimal_cmd_help_flags___args = `
   Arguments
     <argA>`;
 
+export const sub_sub_command_help = `
+  Usage
+    $ doci pipeline build [flags]
+
+  Inherited Flags
+    -h, --help    Show this message`;
+

@@ -74,12 +74,30 @@ const testdata = [
   {
     name: 'minimal cmd help only flags',
     komandoOptions: { name: 'mini' },
-    argv: ['mini', '-h'],
+    argv: ['-h'],
   },
   {
     name: 'minimal cmd help flags + args',
     komandoOptions: { name: 'mini', args: { argA: {} } },
-    argv: ['mini', '-h'],
+    argv: ['-h'],
+  },
+  // https://github.com/ydcjeff/komando/issues/25
+  {
+    name: 'sub sub command help',
+    komandoOptions: {
+      name: 'doci',
+      commands: [
+        defineCommand({
+          name: 'pipeline',
+          commands: [
+            defineCommand({
+              name: 'build',
+            }),
+          ],
+        }),
+      ],
+    },
+    argv: ['pipeline', 'build', '-h'],
   },
 ];
 

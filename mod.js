@@ -94,7 +94,8 @@ export function groupBy(name, toGroup) {
  * @param {string[]} argv
  */
 function komandoImpl(currentCommand, argv) {
-  const { name, version, showVersion } = currentCommand;
+  const { name: bin, version, showVersion } = currentCommand;
+  let { name } = currentCommand;
   if ((argv.includes('-V') || argv.includes('--version')) && version) {
     // @ts-expect-error showVersion exist
     showVersion(name, version);
@@ -112,8 +113,9 @@ function komandoImpl(currentCommand, argv) {
       // @ts-expect-error commands exist
       for (const cmd of currentCommand.commands) {
         const val = argv[0];
-        if (cmd.name === val || cmd.alias === val) {
+        if (cmd.name === val || val && cmd.alias === val) {
           currentCommand = cmd;
+          name += ' ' + currentCommand.name;
           argv.shift();
           hasSubCommands = !!cmd.commands;
           break;
@@ -123,12 +125,12 @@ function komandoImpl(currentCommand, argv) {
   }
 
   if (argv.includes('-h') || argv.includes('--help')) {
-    showHelp(name, currentCommand, version);
+    showHelp(bin, name, currentCommand, version);
     return;
   }
 
   if (!currentCommand.run) {
-    showHelp(name, currentCommand, version);
+    showHelp(bin, name, currentCommand, version);
     Deno.exit(1);
   }
 
@@ -226,25 +228,19 @@ function toKebabCase(str) {
 
 /**
  * @param {string} bin
+ * @param {string} name
  * @param {Command} command
  * @param {string=} version
  */
-function showHelp(bin, command, version) {
+function showHelp(bin, name, command, version) {
   /** @type {Record<string, string | string[]>} */
   const out = {};
   const { columns } = Deno.consoleSize(Deno.stdout.rid);
-  const {
-    description,
-    example,
-    commands,
-    usage,
-    alias,
-    epilog,
-    name,
-  } = command;
+  const { description, example, commands, usage, alias, epilog } = command;
 
   const flags = command.flags;
   const args = command.args;
+  const isBin = bin === name;
 
   // @ts-expect-error flags is not undefined
   flags.help = {
@@ -252,7 +248,7 @@ function showHelp(bin, command, version) {
     defaultV: false,
     short: 'h',
     description: 'Show this message',
-    groupName: bin === name ? 'Flags' : 'Inherited Flags',
+    groupName: isBin ? 'Flags' : 'Inherited Flags',
   };
 
   if (version) {
@@ -262,7 +258,7 @@ function showHelp(bin, command, version) {
       defaultV: false,
       short: 'V',
       description: 'Show version info',
-      groupName: bin === name ? 'Flags' : 'Inherited Flags',
+      groupName: isBin ? 'Flags' : 'Inherited Flags',
     };
   }
 
@@ -279,8 +275,7 @@ function showHelp(bin, command, version) {
 
   fmt(
     'Usage',
-    usage ? usage : '$ ' +
-      (bin === name ? bin : `${bin} ${name}`) +
+    usage ? usage : '$ ' + name +
       (commands?.length ? ' [command]' : '') +
       (args && Object.keys(args).length ? ' [args]' : '') +
       ' [flags]',
