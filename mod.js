@@ -57,6 +57,7 @@ export function defineCommand(options) {
   groupBy('Flags', resolved.flags);
 
   for (const key in resolved.flags) {
+    // @ts-expect-error flags is not empty
     const val = resolved.flags[key];
 
     const typeFn = Array.isArray(val.typeFn) ? val.typeFn[0] : val.typeFn;
@@ -71,6 +72,7 @@ export function defineCommand(options) {
     if (!val.nargs) val.nargs = '1';
   }
 
+  // @ts-expect-error it is compatible tho
   return resolved;
 }
 
@@ -94,6 +96,7 @@ export function groupBy(name, toGroup) {
 function komandoImpl(currentCommand, argv) {
   const { name, version, showVersion } = currentCommand;
   if ((argv.includes('-V') || argv.includes('--version')) && version) {
+    // @ts-expect-error showVersion exist
     showVersion(name, version);
     return;
   }
@@ -106,6 +109,7 @@ function komandoImpl(currentCommand, argv) {
     do {
       // reset here
       hasSubCommands = false;
+      // @ts-expect-error commands exist
       for (const cmd of currentCommand.commands) {
         const val = argv[0];
         if (cmd.name === val || cmd.alias === val) {
@@ -128,6 +132,7 @@ function komandoImpl(currentCommand, argv) {
     Deno.exit(1);
   }
 
+  /** @type {Record<string, unknown>} */
   const unknowns = {};
   const flags = currentCommand.flags;
   const args = currentCommand.args;
@@ -136,6 +141,7 @@ function komandoImpl(currentCommand, argv) {
   const { _: inputArgs, '--': inputDoubleDash, ...inputFlags } = parse(argv, {
     '--': true,
     alias: Object.fromEntries(
+      // @ts-expect-error flags is not undefined
       Object.entries(flags).map(([k, v]) => {
         return [
           k,
@@ -144,12 +150,14 @@ function komandoImpl(currentCommand, argv) {
           ),
         ];
       }),
-    ),
+      ),
+    // @ts-expect-error flags is not undefined
     boolean: Object.entries(flags).filter(([_, v]) => {
       const typeFn = Array.isArray(v.typeFn) ? v.typeFn[0] : v.typeFn;
       return typeFn === Boolean;
     }).map(([k, _]) => k),
     default: Object.fromEntries(
+      // @ts-expect-error flags is not undefined
       Object.entries(flags).map(([k, v]) => [k, v.defaultV ?? undefined]),
     ),
     unknown(arg, _, v) {
@@ -168,8 +176,10 @@ function komandoImpl(currentCommand, argv) {
 
   const parsedFlags = {};
   for (const iflag in inputFlags) {
+    // @ts-expect-error flags is not undefined
     if (iflag in flags) {
       const val = inputFlags[iflag];
+      // @ts-expect-error flags is not undefined
       const { typeFn } = flags[iflag];
       if (Array.isArray(typeFn)) {
         // @ts-expect-error any is not assignable to type never
@@ -181,8 +191,10 @@ function komandoImpl(currentCommand, argv) {
     }
   }
 
+  /** @type {{'--': any, [key: string]: unknown}} */
   const parsedArgs = { '--': inputDoubleDash };
   for (const arg in args) {
+    // @ts-expect-error args is not undefined
     const nargs = args[arg].nargs;
 
     if (nargs === '1' && inputArgs.length < +nargs) {
@@ -234,6 +246,7 @@ function showHelp(bin, command, version) {
   const flags = command.flags;
   const args = command.args;
 
+  // @ts-expect-error flags is not undefined
   flags.help = {
     typeFn: Boolean,
     defaultV: false,
@@ -243,6 +256,7 @@ function showHelp(bin, command, version) {
   };
 
   if (version) {
+    // @ts-expect-error flags is not undefined
     flags.version = {
       typeFn: Boolean,
       defaultV: false,
@@ -275,6 +289,7 @@ function showHelp(bin, command, version) {
   if (example) fmt('Example', example);
 
   const maxLen = Math.max(
+    // @ts-expect-error flags is not undefined
     ...Object.entries(flags).map(([k, v]) => {
       k = toKebabCase(k);
       const { short, placeholder, typeFn } = v;
@@ -304,13 +319,14 @@ function showHelp(bin, command, version) {
       if (description) {
         temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);
       }
+      // @ts-expect-error groupName is not undefined
       fmt(groupName, temp);
     }
   }
 
   for (const flag in flags) {
-    const { description, defaultV, placeholder, short, groupName, typeFn } =
-      flags[flag];
+    // @ts-expect-error flags is not undefined
+    const { description, defaultV, placeholder, short, groupName, typeFn } = flags[flag];
     let temp = (short ? `-${short},` : '   ') + ` --${toKebabCase(flag)}`;
     if (placeholder) {
       temp += ' ' +
@@ -326,6 +342,7 @@ function showHelp(bin, command, version) {
 
   if (args && Object.keys(args).length) {
     for (const arg in args) {
+      // @ts-expect-error args is not undefined
       const { description, nargs } = args[arg];
       let temp = formatNargs(nargs, arg);
       if (description) {
