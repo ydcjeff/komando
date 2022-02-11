@@ -150,7 +150,7 @@ function komandoImpl(currentCommand, argv) {
           ),
         ];
       }),
-      ),
+    ),
     // @ts-expect-error flags is not undefined
     boolean: Object.entries(flags).filter(([_, v]) => {
       const typeFn = Array.isArray(v.typeFn) ? v.typeFn[0] : v.typeFn;
@@ -325,8 +325,9 @@ function showHelp(bin, command, version) {
   }
 
   for (const flag in flags) {
+    const { description, defaultV, placeholder, short, groupName, typeFn } =
     // @ts-expect-error flags is not undefined
-    const { description, defaultV, placeholder, short, groupName, typeFn } = flags[flag];
+      flags[flag];
     let temp = (short ? `-${short},` : '   ') + ` --${toKebabCase(flag)}`;
     if (placeholder) {
       temp += ' ' +
