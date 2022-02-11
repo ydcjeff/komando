@@ -1,6 +1,7 @@
 # Komando
 
 [![ci status](https://github.com/ydcjeff/komando/actions/workflows/ci.yml/badge.svg)](https://github.com/ydcjeff/komando/actions/workflows/ci.yml)
+[![deno module](https://shield.deno.dev/x/komando)](https://deno.land/x/komando)
 [![deno docs](https://doc.deno.land/badge.svg)](https://doc.deno.land/https://deno.land/x/komando/mod.js)
 
 [![npm version](https://badgen.net/npm/v/komando)](https://www.npmjs.com/package/komando)
