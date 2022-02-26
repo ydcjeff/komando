@@ -64,7 +64,6 @@ export function defineCommand(options) {
     if (!val.placeholder && typeFn !== Boolean) val.placeholder = key;
     if (typeFn === Boolean) {
       val.placeholder = undefined;
-      val.defaultV = false;
     }
   }
 
