@@ -148,7 +148,7 @@ komando({
 
 ### Run function
 
-- [`run` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando@/mod.js/~/RunFunction)
+- [`run` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando/mod.js/~/RunFunction)
 
 Each command has an optional `run` function to run when the command is
 encountered in the `argv`.
@@ -171,11 +171,11 @@ komando({
 
 ### Misc
 
-- [`groupBy` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando@v0.0.5/mod.js/~/groupBy)
+- [`groupBy` on Deno Doc](https://doc.deno.land/https://deno.land/x/komando/mod.js/~/groupBy)
 
   Commands or flags can be grouped under custom title in the help message. This
   is done by
-  [`groupBy`](https://doc.deno.land/https://deno.land/x/komando@v0.0.5/mod.js/~/groupBy)
+  [`groupBy`](https://doc.deno.land/https://deno.land/x/komando/mod.js/~/groupBy)
   function. It takes a title and an array of commands or a flags object to
   group.
 
