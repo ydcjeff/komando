@@ -188,7 +188,7 @@ test('default true flag', () => {
     name,
     flags: { True: { typeFn: Boolean, defaultV: true } },
     run(_, flags) {
-      assert(flags.True)
-    }
-  }, [''])
-})
+      assert(flags.True);
+    },
+  }, ['']);
+});
