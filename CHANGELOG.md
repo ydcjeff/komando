@@ -2,6 +2,18 @@
 
 <!-- CHLOG_SPLIT_MARKER -->
 
+## [v1.0.2](https://github.com/ydcjeff/komando/compare/v1.0.1...v1.0.2)
+
+_2022-02-26_
+
+### Refactoring
+
+- [`b3bdd0f`](https://github.com/ydcjeff/komando/commit/b3bdd0f) remove setting
+  boolean flag default value to false (#26)
+
+  Deno module `flags` will set the default value to `false` unless there is no
+  `defaultV`.
+
 ## [v1.0.1](https://github.com/ydcjeff/komando/compare/v1.0.0...v1.0.1)
 
 _2022-02-11_
