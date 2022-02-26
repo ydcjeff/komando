@@ -182,3 +182,13 @@ test('no kebab case + no short flag', () => {
     },
   }, ['--open']);
 });
+
+test('default true flag', () => {
+  komando({
+    name,
+    flags: { True: { typeFn: Boolean, defaultV: true } },
+    run(_, flags) {
+      assert(flags.True)
+    }
+  }, [''])
+})
