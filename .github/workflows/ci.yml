@@ -21,7 +21,7 @@ jobs:
 
       - run: deno fmt --check
       - run: deno lint
-      - run: deno test --unstable --coverage=./cov --ignore=tests/help_test.ts --no-check
+      - run: deno test --unstable --coverage=./cov --no-check --ignore=tests/help_test.ts
       - run: deno coverage ./cov
 
   node:

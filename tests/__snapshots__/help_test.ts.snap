@@ -1,4 +1,7 @@
-export const root_cmd_help = `
+export const snapshot = {};
+
+snapshot[`root cmd help 1`] = `
+"
   Description
     Root command desc
 
@@ -26,9 +29,11 @@ export const root_cmd_help = `
     <argD>                  argD desc
 
   EPILOG TEXT
-    This section is useful for more info.`;
+    This section is useful for more info."
+`;
 
-export const sub_one_cmd_help = `
+snapshot[`sub one cmd help 1`] = `
+"
   Description
     sub1 cmd desc
 
@@ -36,7 +41,7 @@ export const sub_one_cmd_help = `
     s1
 
   Usage
-    $ root sub1 [command] [flags]
+    \$ root sub1 [command] [flags]
 
   SUBCOMMANDS
     subsub1
@@ -50,29 +55,35 @@ export const sub_one_cmd_help = `
 
   Inherited Flags
     -h, --help                       Show this message
-    -V, --version                    Show version info`;
+    -V, --version                    Show version info"
+`;
 
-export const minimal_cmd_help_only_flags = `
+snapshot[`minimal cmd help only flags 1`] = `
+"
   Usage
-    $ mini [flags]
+    \$ mini [flags]
 
   Flags
-    -h, --help    Show this message`;
+    -h, --help    Show this message"
+`;
 
-export const minimal_cmd_help_flags___args = `
+snapshot[`minimal cmd help flags + args 1`] = `
+"
   Usage
-    $ mini [args] [flags]
+    \$ mini [args] [flags]
 
   Flags
     -h, --help    Show this message
 
   Arguments
-    <argA>`;
+    <argA>"
+`;
 
-export const sub_sub_command_help = `
+snapshot[`sub sub command help 1`] = `
+"
   Usage
-    $ doci pipeline build [flags]
+    \$ doci pipeline build [flags]
 
   Inherited Flags
-    -h, --help    Show this message`;
-
+    -h, --help    Show this message"
+`;
