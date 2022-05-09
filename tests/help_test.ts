@@ -1,8 +1,5 @@
 import { defineCommand, groupBy, komando } from '../mod.js';
-import { assert, restoreAll, setupSnapshot, spyOn } from '../deps_test.ts';
-
-const { test } = Deno;
-const assertSnapshot = await setupSnapshot(import.meta.url);
+import { assert, restoreAll, assertSnapshot, spyOn } from '../deps_test.ts';
 
 const komandoOptions = {
   name: 'root',
@@ -102,11 +99,11 @@ const testdata = [
 ];
 
 for (const td of testdata) {
-  test(td.name, () => {
+  Deno.test(td.name, async (t) => {
     const spy = spyOn(console, 'log');
     komando(td.komandoOptions, td.argv);
     assert(spy.called);
-    assertSnapshot(spy.calls.flat().join('\n'), td.name);
+    await assertSnapshot(t, spy.calls.flat().join('\n'));
     restoreAll();
   });
 }
