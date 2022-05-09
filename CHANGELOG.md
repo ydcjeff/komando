@@ -2,6 +2,15 @@
 
 <!-- CHLOG_SPLIT_MARKER -->
 
+## [v1.0.3](https://github.com/ydcjeff/komando/compare/v1.0.2...v1.0.3)
+
+_2022-05-09_
+
+### Dependency Updates
+
+- [`628ab02`](https://github.com/ydcjeff/komando/commit/628ab02) bump deps +
+  deno
+
 ## [v1.0.2](https://github.com/ydcjeff/komando/compare/v1.0.1...v1.0.2)
 
 _2022-02-26_
