@@ -1,5 +1,5 @@
 import { defineCommand, groupBy, komando } from '../mod.js';
-import { assert, restoreAll, assertSnapshot, spyOn } from '../deps_test.ts';
+import { assert, assertSnapshot, restoreAll, spyOn } from '../deps_test.ts';
 
 const komandoOptions = {
   name: 'root',
