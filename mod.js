@@ -234,6 +234,7 @@ function toKebabCase(str) {
 function showHelp(bin, name, command, version) {
   /** @type {Record<string, string | string[]>} */
   const out = {};
+  // @ts-expect-error Deno.stdout.rid doesn't work with deno test
   const { columns } = Deno.consoleSize();
   const { description, example, commands, usage, alias, epilog } = command;
 
