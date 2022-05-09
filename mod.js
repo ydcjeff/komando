@@ -234,7 +234,7 @@ function toKebabCase(str) {
 function showHelp(bin, name, command, version) {
   /** @type {Record<string, string | string[]>} */
   const out = {};
-  const { columns } = Deno.consoleSize(Deno.stdout.rid);
+  const { columns } = Deno.consoleSize();
   const { description, example, commands, usage, alias, epilog } = command;
 
   const flags = command.flags;

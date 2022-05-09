@@ -1,0 +1,89 @@
+export const snapshot = {};
+
+snapshot[`root cmd help 1`] = `
+"
+  Description
+    Root command desc
+
+  Usage
+    Root command usage
+
+  Example
+    root sub1 --parent
+    root s1 subsub1
+    root deno.json -p deps
+
+  Commands
+    sub1, s1                sub1 cmd desc
+
+  Flags
+    -p, --parent <dir>      some dir (default: dist)
+        --flag-a <flagA>
+    -h, --help              Show this message
+    -V, --version           Show version info
+
+  Arguments
+    [argA]                  argA desc
+    [argB...]               argB desc
+    <argC>...               argC desc
+    <argD>                  argD desc
+
+  EPILOG TEXT
+    This section is useful for more info."
+`;
+
+snapshot[`sub one cmd help 1`] = `
+"
+  Description
+    sub1 cmd desc
+
+  Alias
+    s1
+
+  Usage
+    \$ root sub1 [command] [flags]
+
+  SUBCOMMANDS
+    subsub1
+    subsub2
+    subsub3
+
+  SUBFLAGS
+        --sub-flag-a <subFlagA>
+        --sub-flag-b <subFlagB>
+        --sub-flagc <subFlagc>...
+
+  Inherited Flags
+    -h, --help                       Show this message
+    -V, --version                    Show version info"
+`;
+
+snapshot[`minimal cmd help only flags 1`] = `
+"
+  Usage
+    \$ mini [flags]
+
+  Flags
+    -h, --help    Show this message"
+`;
+
+snapshot[`minimal cmd help flags + args 1`] = `
+"
+  Usage
+    \$ mini [args] [flags]
+
+  Flags
+    -h, --help    Show this message
+
+  Arguments
+    <argA>"
+`;
+
+snapshot[`sub sub command help 1`] = `
+"
+  Usage
+    \$ doci pipeline build [flags]
+
+  Inherited Flags
+    -h, --help    Show this message"
+`;
