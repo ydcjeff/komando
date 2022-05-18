@@ -14,12 +14,12 @@ import { parse } from './deps.ts';
  * @param {string[]} argv
  */
 export function komando(options, argv = Deno.args) {
-  const resolved = defineCommand(options);
+  const resolved = define_command(options);
   if (!resolved.showVersion) {
     /** @param {string} name @param {string} version */
     resolved.showVersion = (name, version) => console.log(`${name}@${version}`);
   }
-  komandoImpl(resolved, argv);
+  komando_impl(resolved, argv);
 }
 
 /**
@@ -27,7 +27,7 @@ export function komando(options, argv = Deno.args) {
  * @param {import('./mod.d.ts').CommandOptions<F, A>} options
  * @returns {Command}
  */
-export function defineCommand(options) {
+export function define_command(options) {
   const resolved = {
     commands: [],
     flags: {},
@@ -53,8 +53,8 @@ export function defineCommand(options) {
     }
   }
 
-  groupBy('Commands', resolved.commands);
-  groupBy('Flags', resolved.flags);
+  group_by('Commands', resolved.commands);
+  group_by('Flags', resolved.flags);
 
   for (const key in resolved.flags) {
     // @ts-expect-error flags is not empty
@@ -78,21 +78,21 @@ export function defineCommand(options) {
 /**
  * @template T
  * @param {string} name
- * @param {T} toGroup
+ * @param {T} group
  * @returns T
  */
-export function groupBy(name, toGroup) {
-  for (const val of Object.values(toGroup)) {
+export function group_by(name, group) {
+  for (const val of Object.values(group)) {
     if (!val.groupName) val.groupName = name;
   }
-  return toGroup;
+  return group;
 }
 
 /**
  * @param {Command} currentCommand
  * @param {string[]} argv
  */
-function komandoImpl(currentCommand, argv) {
+function komando_impl(currentCommand, argv) {
   const { name: bin, version, showVersion } = currentCommand;
   let { name } = currentCommand;
   if ((argv.includes('-V') || argv.includes('--version')) && version) {
@@ -124,12 +124,12 @@ function komandoImpl(currentCommand, argv) {
   }
 
   if (argv.includes('-h') || argv.includes('--help')) {
-    showHelp(bin, name, currentCommand, version);
+    show_help(bin, name, currentCommand, version);
     return;
   }
 
   if (!currentCommand.run) {
-    showHelp(bin, name, currentCommand, version);
+    show_help(bin, name, currentCommand, version);
     Deno.exit(1);
   }
 
@@ -146,7 +146,7 @@ function komandoImpl(currentCommand, argv) {
       Object.entries(flags).map(([k, v]) => {
         return [
           k,
-          [camelCaseRE.test(k) ? toKebabCase(k) : '', v.short ?? ''].filter(
+          [camelCaseRE.test(k) ? to_kebab_case(k) : '', v.short ?? ''].filter(
             (v) => v,
           ),
         ];
@@ -221,7 +221,7 @@ function komandoImpl(currentCommand, argv) {
 
 const camelCaseRE = /\B([A-Z])/g;
 /** @param {string} str */
-function toKebabCase(str) {
+function to_kebab_case(str) {
   return str.replace(camelCaseRE, '-$1').toLowerCase();
 }
 
@@ -231,10 +231,11 @@ function toKebabCase(str) {
  * @param {Command} command
  * @param {string=} version
  */
-function showHelp(bin, name, command, version) {
+function show_help(bin, name, command, version) {
   /** @type {Record<string, string | string[]>} */
   const out = {};
   // @ts-expect-error Deno.stdout.rid doesn't work with deno test
+  // https://github.com/denoland/deno/issues/14543
   const { columns } = Deno.consoleSize();
   const { description, example, commands, usage, alias, epilog } = command;
 
@@ -286,11 +287,11 @@ function showHelp(bin, name, command, version) {
   const maxLen = Math.max(
     // @ts-expect-error flags is not undefined
     ...Object.entries(flags).map(([k, v]) => {
-      k = toKebabCase(k);
+      k = to_kebab_case(k);
       const { short, placeholder, typeFn } = v;
       const nargs = Array.isArray(typeFn) ? '+' : '1';
       const temp = (short ? `-${short}, ` : '    ') + `--${k}` +
-        (placeholder ? ' ' + formatNargs(nargs, placeholder) : '');
+        (placeholder ? ' ' + fmt_nargs(nargs, placeholder) : '');
       return temp.length;
     }),
   ) + 4; // 4 here is gap between commands/flags/args and desc;
@@ -304,7 +305,7 @@ function showHelp(bin, name, command, version) {
     'g',
   );
   /** @param {string} str */
-  const wrapAndIndent = (str) =>
+  const wrap_indent = (str) =>
     str.replace(wrapRE, `$1\n${' '.repeat(descIndent)}`);
 
   if (commands?.length) {
@@ -312,7 +313,7 @@ function showHelp(bin, name, command, version) {
       const { name, alias, description, groupName } = cmd;
       let temp = name + (alias ? `, ${alias}` : '');
       if (description) {
-        temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);
+        temp += ' '.padEnd(maxLen - temp.length) + wrap_indent(description);
       }
       // @ts-expect-error groupName is not undefined
       fmt(groupName, temp);
@@ -323,13 +324,13 @@ function showHelp(bin, name, command, version) {
     const { description, defaultV, placeholder, short, groupName, typeFn } =
       // @ts-expect-error flags is not undefined
       flags[flag];
-    let temp = (short ? `-${short},` : '   ') + ` --${toKebabCase(flag)}`;
+    let temp = (short ? `-${short},` : '   ') + ` --${to_kebab_case(flag)}`;
     if (placeholder) {
       temp += ' ' +
-        formatNargs(Array.isArray(typeFn) ? '+' : '1', placeholder);
+        fmt_nargs(Array.isArray(typeFn) ? '+' : '1', placeholder);
     }
     if (description || defaultV) temp += ' '.padEnd(maxLen - temp.length);
-    temp += wrapAndIndent(
+    temp += wrap_indent(
       (description ? description : '') +
         (defaultV ? ` (default: ${defaultV})` : ''),
     );
@@ -340,9 +341,9 @@ function showHelp(bin, name, command, version) {
     for (const arg in args) {
       // @ts-expect-error args is not undefined
       const { description, nargs } = args[arg];
-      let temp = formatNargs(nargs, arg);
+      let temp = fmt_nargs(nargs, arg);
       if (description) {
-        temp += ' '.padEnd(maxLen - temp.length) + wrapAndIndent(description);
+        temp += ' '.padEnd(maxLen - temp.length) + wrap_indent(description);
       }
       fmt('Arguments', temp);
     }
@@ -358,7 +359,7 @@ function showHelp(bin, name, command, version) {
  * @param {'1' | '?' | '*' | '+'} nargs
  * @param {string} placeholder
  */
-function formatNargs(nargs, placeholder) {
+function fmt_nargs(nargs, placeholder) {
   return nargs === '?'
     ? `[${placeholder}]`
     : nargs === '*'
@@ -376,3 +377,5 @@ function error(msg) {
   console.error('Try --help for more info.');
   Deno.exit(1);
 }
+
+export { define_command as defineCommand, group_by as groupBy };
