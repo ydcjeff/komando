@@ -1,10 +1,10 @@
 {
-  "deno.enable": true,
-  "deno.lint": true,
-  "deno.unstable": true,
-  "deno.suggest.imports.hosts": {
-    "https://deno.land": true,
-    "https://cdn.nest.land": false,
-    "https://crux.land": false
-  }
+	"deno.enable": true,
+	"deno.lint": true,
+	"deno.unstable": true,
+	"deno.suggest.imports.hosts": {
+		"https://deno.land": true,
+		"https://cdn.nest.land": false,
+		"https://crux.land": false
+	}
 }

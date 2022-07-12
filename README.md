@@ -48,9 +48,9 @@ the terminal width.
 
 ```js
 komando({
-  name: 'main',
-  version: '1.0.0', // will add `-V, --version` flag if `version` exist.
-  // ... the rest of options
+	name: 'main',
+	version: '1.0.0', // will add `-V, --version` flag if `version` exist.
+	// ... the rest of options
 });
 ```
 
@@ -66,16 +66,16 @@ the `commands` property of the parent sub-commands.
 
 ```js
 const devCommand = defineCommand({
-  name: 'dev',
-  commands: [
-    // ...sub sub commands if needed
-  ],
+	name: 'dev',
+	commands: [
+		// ...sub sub commands if needed
+	],
 });
 
 komando({
-  commands: [
-    devCommand,
-  ],
+	commands: [
+		devCommand,
+	],
 });
 ```
 
@@ -89,13 +89,13 @@ Flags (aka Options) are simple JavaScript objects and they can be created in the
 
 ```js
 komando({
-  // ...
-  flags: {
-    host: {
-      typeFn: String, // require for type inference, can be Number, Boolean, or [Number] for an array of output any other function that takes one argument and return one value,
-      // ...
-    },
-  },
+	// ...
+	flags: {
+		host: {
+			typeFn: String, // require for type inference, can be Number, Boolean, or [Number] for an array of output any other function that takes one argument and return one value,
+			// ...
+		},
+	},
 });
 ```
 
@@ -104,22 +104,22 @@ global shared object and reused it where needed.**_
 
 ```js
 const globalOptions = {
-  config: { typeFn: String },
-  debug: { typeFn: Boolean },
+	config: { typeFn: String },
+	debug: { typeFn: Boolean },
 };
 
 const devCommand = defineCommand({
-  flags: {
-    host: { typeFn: String },
-    port: { typeFn: Number },
-    ...globalOptions,
-  },
+	flags: {
+		host: { typeFn: String },
+		port: { typeFn: Number },
+		...globalOptions,
+	},
 });
 
 komando({
-  flags: {
-    ...globalOptions,
-  },
+	flags: {
+		...globalOptions,
+	},
 });
 ```
 
@@ -134,15 +134,15 @@ command options. Arguments after `--` are collected in the `--` property of
 
 ```js
 komando({
-  args: {
-    root: {
-      nargs: '?', // can be one of '1' | '?' | '*' | '+'
-      description: 'Root directory',
-    },
-  },
-  run(args) {
-    console.log(args); // { '--': [], root: undefined }
-  },
+	args: {
+		root: {
+			nargs: '?', // can be one of '1' | '?' | '*' | '+'
+			description: 'Root directory',
+		},
+	},
+	run(args) {
+		console.log(args); // { '--': [], root: undefined }
+	},
 });
 ```
 
@@ -155,17 +155,17 @@ encountered in the `argv`.
 
 ```js
 komando({
-  // ....
-  flags: {
-    config: { typeFn: String },
-    debug: { typeFn: Number },
-  },
-  run(args, flags) {
-    // do something, run your code with fully typed `args`, `flags`
-    flags.config; // string | undefined
-    flags.debug; // boolean | undefined
-    args['--']; // string[]
-  },
+	// ....
+	flags: {
+		config: { typeFn: String },
+		debug: { typeFn: Number },
+	},
+	run(args, flags) {
+		// do something, run your code with fully typed `args`, `flags`
+		flags.config; // string | undefined
+		flags.debug; // boolean | undefined
+		args['--']; // string[]
+	},
 });
 ```
 
